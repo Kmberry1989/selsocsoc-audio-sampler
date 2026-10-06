@@ -1,4 +1,4 @@
-# Audio Studio — Selfie Social Society
+# Audio Sampler — Selfie Social Society
 
 Hear every procedural sound effect in Selfie Social Society by selecting its
 intended replacement file name — whether or not a replacement file exists yet.
