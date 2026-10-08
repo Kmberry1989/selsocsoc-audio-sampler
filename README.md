@@ -17,6 +17,18 @@ file exists yet.
 - Upload your own recording per slot to A/B it against the original
 - Global volume control
 
+## Labs: generate your own
+- **Sound Lab** — a small synth (wave, pitch sweep, noise, filter, wobble) with
+  one-shot presets (coin, jump, pop, whoosh, click, power-up) and a randomizer
+- **Music Lab** — composes 12-bar loop-ready tracks in the game's relaxed cozy
+  style; pick a mood (Sunny Meadow, Quiet Evening, Playful), key, tempo, and
+  melody density, then draft new melodies
+- Both labs play instantly and download real WAV files
+- **Save as new slot** — give a creation its own filename and purpose (e.g.
+  what game moment it belongs to); it lands in **My Creations** with its
+  intended game path (`assets/audio/sfx/<name>.mp3` or
+  `assets/audio/music/<name>.wav`), and persists across visits
+
 ## Run it
 Open `index.html` in a browser — it's self-contained apart from the `music/`
 folder, which must sit next to `index.html`.

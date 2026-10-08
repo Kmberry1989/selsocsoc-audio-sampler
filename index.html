@@ -233,6 +233,28 @@
     }
     button:disabled { cursor: not-allowed; opacity: .42; }
     .play-mine { font-size: .82rem; }
+    .lab-note { color: var(--muted); font-size: .92rem; margin: 0 0 18px; max-width: 62ch; }
+    .lab-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .lab-field { display: block; margin: 0 0 12px; }
+    .lab-field > span { display: flex; justify-content: space-between; align-items: baseline; font-size: .72rem; font-weight: 700; margin-bottom: 4px; }
+    .lab-field output { color: var(--muted); font-family: "IBM Plex Mono", monospace; font-weight: 400; }
+    .lab-field input[type="text"], .lab-field select {
+      width: 100%; min-height: 44px; padding: 8px 10px;
+      border: 1px solid var(--line); border-radius: 5px;
+      background: var(--panel); color: var(--ink); font-size: .9rem;
+    }
+    .preset-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .preset-row button { min-height: 44px; padding: 8px 12px; font-size: .82rem; }
+    .preset-row button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+    .lab-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin: 0 0 14px; }
+    .lab-actions .play-procedural { grid-column: auto; }
+    .lab-hint { color: var(--muted); font-size: .75rem; margin: 10px 0 0; }
+    .lab-hint code { font-family: "IBM Plex Mono", monospace; font-size: .72rem; }
+    .type-badge {
+      font-size: .68rem; font-weight: 700; padding: 3px 8px; border-radius: 999px;
+      background: var(--panel-2); border: 1px solid var(--line); color: var(--muted); flex: none;
+    }
+    .purpose { color: var(--muted); font-size: .82rem; margin: 0 0 14px; }
     .audio-state {
       position: fixed;
       z-index: 20;
@@ -257,6 +279,7 @@
       .controls-wrap { padding: 10px 14px; }
       main { padding-left: 14px; padding-right: 14px; }
       .grid { grid-template-columns: 1fr; }
+      .lab-grid { grid-template-columns: 1fr; }
       .section { scroll-margin-top: 190px; }
       .intro-note { align-items: start; }
     }
@@ -276,7 +299,7 @@
   <header class="masthead">
     <div class="masthead-inner">
       <h1>Audio Sampler</h1>
-      <p>Audition every procedural sound effect and music track in Selfie Social Society, then load a replacement locally for a direct A/B listen.</p>
+      <p>Audition every procedural sound effect and music track in Selfie Social Society, A/B a replacement — or generate your own in the Sound Lab and Music Lab.</p>
     </div>
   </header>
 
@@ -301,6 +324,86 @@
   <main>
     <p class="intro-note"><strong>Nothing is installed yet.</strong> Each SFX slot starts with its real procedural sound; the six music tracks are the actual files shipped in the game. Uploaded files stay only in this open page.</p>
     <div id="catalog"></div>
+    <div id="labs">
+      <section class="section" id="section-sound-lab">
+        <div class="section-heading"><h2>Sound Lab</h2><span class="section-rule"></span><span class="section-count">generate SFX</span></div>
+        <p class="lab-note">Build your own sound effects with a small synth. Play it, download the WAV, or save it as a brand-new slot with its own filename and purpose.</p>
+        <div class="lab-grid">
+          <article class="sound-card">
+            <div class="sound-top"><h3>Start from</h3></div>
+            <div class="preset-row" id="sfx-presets">
+              <button type="button" data-preset="coin">Coin</button>
+              <button type="button" data-preset="jump">Jump</button>
+              <button type="button" data-preset="pop">Pop</button>
+              <button type="button" data-preset="whoosh">Whoosh</button>
+              <button type="button" data-preset="click">Click</button>
+              <button type="button" data-preset="powerup">Power-up</button>
+            </div>
+            <button type="button" id="sfx-surprise" class="play-procedural">Surprise me</button>
+          </article>
+          <article class="sound-card">
+            <div class="sound-top"><h3>Shape it</h3></div>
+            <label class="lab-field"><span>Wave</span>
+              <select id="sfx-wave">
+                <option value="sine">Sine — soft</option>
+                <option value="triangle" selected>Triangle — mellow</option>
+                <option value="square">Square — retro</option>
+                <option value="sawtooth">Sawtooth — buzzy</option>
+              </select>
+            </label>
+            <div id="sfx-sliders"></div>
+          </article>
+          <article class="sound-card">
+            <div class="sound-top"><h3>Keep it</h3></div>
+            <div class="lab-actions">
+              <button type="button" id="sfx-play" class="play-procedural">Play</button>
+              <button type="button" id="sfx-download">Download WAV</button>
+            </div>
+            <label class="lab-field"><span>Filename</span><input id="sfx-filename" type="text" value="custom-sfx-1" spellcheck="false" autocomplete="off"></label>
+            <label class="lab-field"><span>Purpose</span><input id="sfx-purpose" type="text" maxlength="90" placeholder="e.g. victory jingle for Snowball Toss" autocomplete="off"></label>
+            <button type="button" id="sfx-save" class="play-procedural">Save as new slot</button>
+            <p class="lab-hint">Lands in My Creations as <code>assets/audio/sfx/&lt;filename&gt;.mp3</code></p>
+          </article>
+        </div>
+      </section>
+      <section class="section" id="section-music-lab">
+        <div class="section-heading"><h2>Music Lab</h2><span class="section-rule"></span><span class="section-count">generate music</span></div>
+        <p class="lab-note">Compose a 12-bar loop in the game's relaxed cozy style. Pick a mood and key, draft a melody, then download the WAV or save it as a new track slot.</p>
+        <div class="lab-grid">
+          <article class="sound-card">
+            <div class="sound-top"><h3>Mood</h3></div>
+            <div class="preset-row" id="music-moods">
+              <button type="button" data-mood="sunny" aria-pressed="true">Sunny Meadow</button>
+              <button type="button" data-mood="evening" aria-pressed="false">Quiet Evening</button>
+              <button type="button" data-mood="playful" aria-pressed="false">Playful</button>
+            </div>
+            <label class="lab-field"><span>Key</span><select id="music-key"></select></label>
+            <button type="button" id="music-regen" class="play-procedural">Draft a new melody</button>
+          </article>
+          <article class="sound-card">
+            <div class="sound-top"><h3>Feel</h3></div>
+            <div id="music-sliders"></div>
+            <p class="lab-hint">Always 12 bars and loop-ready, in the game's relaxed style.</p>
+          </article>
+          <article class="sound-card">
+            <div class="sound-top"><h3>Keep it</h3></div>
+            <div class="lab-actions">
+              <button type="button" id="music-play" class="play-procedural">Play</button>
+              <button type="button" id="music-download">Download WAV</button>
+            </div>
+            <label class="lab-field"><span>Filename</span><input id="music-filename" type="text" value="custom-track-1" spellcheck="false" autocomplete="off"></label>
+            <label class="lab-field"><span>Purpose</span><input id="music-purpose" type="text" maxlength="90" placeholder="e.g. evening theme for the garden" autocomplete="off"></label>
+            <button type="button" id="music-save" class="play-procedural">Save as new slot</button>
+            <p class="lab-hint">Lands in My Creations as <code>assets/audio/music/&lt;filename&gt;.wav</code></p>
+          </article>
+        </div>
+      </section>
+      <section class="section" id="section-my-creations">
+        <div class="section-heading"><h2>My Creations</h2><span class="section-rule"></span><span class="section-count" id="creations-count">0 slots</span></div>
+        <p class="lab-note" id="creations-empty">Nothing saved yet — generate something in the labs above.</p>
+        <div class="grid" id="creations-grid"></div>
+      </section>
+    </div>
   </main>
   <div class="audio-state" id="audio-state" role="status" aria-live="polite"></div>
 
@@ -1414,6 +1517,526 @@ class ProceduralCatAudioEngine {
     window.addEventListener("beforeunload", function () {
       Object.keys(uploads).forEach(function (fileId) { URL.revokeObjectURL(uploads[fileId].url); });
     });
+
+    /* ================= Sound Lab + Music Lab + My Creations ================= */
+
+    function mulberry32(a) {
+      return function () {
+        a |= 0; a = a + 0x6D2B79F5 | 0;
+        var t = Math.imul(a ^ a >>> 15, 1 | a);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+    }
+
+    var _noiseBufs = {};
+    function getNoiseBuffer(ctx) {
+      var key = ctx.sampleRate;
+      if (!_noiseBufs[key]) {
+        var len = Math.floor(ctx.sampleRate * 2);
+        var buf = ctx.createBuffer(1, len, ctx.sampleRate);
+        var d = buf.getChannelData(0);
+        for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+        _noiseBufs[key] = buf;
+      }
+      return _noiseBufs[key];
+    }
+
+    function encodeWav(buffer) {
+      var numCh = Math.min(2, buffer.numberOfChannels);
+      var sr = buffer.sampleRate, len = buffer.length;
+      var bytes = 44 + len * numCh * 2;
+      var ab = new ArrayBuffer(bytes);
+      var v = new DataView(ab);
+      function wstr(o, s) { for (var i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); }
+      wstr(0, "RIFF"); v.setUint32(4, bytes - 8, true); wstr(8, "WAVE"); wstr(12, "fmt ");
+      v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, numCh, true);
+      v.setUint32(24, sr, true); v.setUint32(28, sr * numCh * 2, true);
+      v.setUint16(32, numCh * 2, true); v.setUint16(34, 16, true);
+      wstr(36, "data"); v.setUint32(40, len * numCh * 2, true);
+      var chs = [];
+      for (var c = 0; c < numCh; c++) chs.push(buffer.getChannelData(c));
+      var off = 44;
+      for (var i = 0; i < len; i++) {
+        for (var c = 0; c < numCh; c++) {
+          var s = Math.max(-1, Math.min(1, chs[c][i]));
+          v.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+          off += 2;
+        }
+      }
+      return new Blob([ab], { type: "audio/wav" });
+    }
+
+    function downloadBlob(blob, name) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click();
+      window.setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 800);
+    }
+
+    /* ---------- SFX synth ---------- */
+
+    var SFX_PRESETS = {
+      coin:    { wave: "square",   f0: 880,  f1: 1320, dur: 0.22, attack: 0.004, noise: 0,    cutoff: 6000, vib: 0  },
+      jump:    { wave: "sine",     f0: 280,  f1: 660,  dur: 0.35, attack: 0.010, noise: 0,    cutoff: 4000, vib: 0  },
+      pop:     { wave: "triangle", f0: 520,  f1: 170,  dur: 0.14, attack: 0.003, noise: 0.35, cutoff: 3000, vib: 0  },
+      whoosh:  { wave: "sine",     f0: 220,  f1: 90,   dur: 0.60, attack: 0.080, noise: 0.85, cutoff: 2400, vib: 0  },
+      click:   { wave: "square",   f0: 1250, f1: 900,  dur: 0.06, attack: 0.002, noise: 0.15, cutoff: 8000, vib: 0  },
+      powerup: { wave: "sawtooth", f0: 380,  f1: 1180, dur: 0.50, attack: 0.020, noise: 0,    cutoff: 5000, vib: 35 }
+    };
+
+    var SFX_CONTROLS = [
+      ["f0", "Pitch start", "Hz", 80, 1600, 880, 1],
+      ["f1", "Pitch end", "Hz", 80, 1600, 1320, 1],
+      ["dur", "Length", "s", 0.06, 2, 0.22, 0.01],
+      ["attack", "Attack", "ms", 2, 250, 4, 1],
+      ["noise", "Noise", "%", 0, 100, 0, 1],
+      ["cutoff", "Brightness", "Hz", 300, 12000, 6000, 10],
+      ["vib", "Wobble", "Hz", 0, 120, 0, 1]
+    ];
+
+    function drawSfx(ctx, dest, p, t0) {
+      var t = (typeof t0 === "number") ? t0 : ctx.currentTime + 0.02;
+      var dur = Math.max(0.05, p.dur);
+      var osc = ctx.createOscillator();
+      osc.type = p.wave;
+      osc.frequency.setValueAtTime(Math.max(20, p.f0), t);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(20, p.f1), t + dur);
+      if (p.vib > 0.5) {
+        var lfo = ctx.createOscillator(); lfo.type = "sine"; lfo.frequency.value = 28;
+        var lg = ctx.createGain(); lg.gain.value = p.vib;
+        lfo.connect(lg); lg.connect(osc.frequency);
+        lfo.start(t); lfo.stop(t + dur + 0.05);
+      }
+      var amp = ctx.createGain();
+      amp.gain.setValueAtTime(0.0001, t);
+      amp.gain.exponentialRampToValueAtTime(0.85, t + Math.max(0.002, p.attack));
+      amp.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      var filt = ctx.createBiquadFilter();
+      filt.type = "lowpass"; filt.frequency.value = p.cutoff; filt.Q.value = 0.7;
+      osc.connect(filt); filt.connect(amp); amp.connect(dest);
+      osc.start(t); osc.stop(t + dur + 0.05);
+      if (p.noise > 0.01) {
+        var src = ctx.createBufferSource(); src.buffer = getNoiseBuffer(ctx); src.loop = true;
+        var nf = ctx.createBiquadFilter();
+        nf.type = "bandpass"; nf.frequency.value = Math.min(9000, p.cutoff); nf.Q.value = 0.6;
+        var ng = ctx.createGain();
+        ng.gain.setValueAtTime(p.noise * 0.7, t);
+        ng.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        src.connect(nf); nf.connect(ng); ng.connect(dest);
+        src.start(t); src.stop(t + dur + 0.05);
+      }
+      return dur;
+    }
+
+    function renderSfxBlob(p) {
+      var seconds = p.dur + 0.4, sr = 44100;
+      var off = new OfflineAudioContext(2, Math.ceil(seconds * sr), sr);
+      drawSfx(off, off.destination, p, 0.03);
+      return off.startRendering().then(encodeWav);
+    }
+
+    function buildSliders(hostId, config, prefix) {
+      var host = document.getElementById(hostId);
+      var html = "";
+      config.forEach(function (c) {
+        var id = prefix + "-" + c[0];
+        html += '<label class="lab-field"><span>' + c[1] + ' <output id="' + id + '-out" data-unit="' + c[2] + '">' + c[5] + " " + c[2] + '</output></span>' +
+          '<input type="range" id="' + id + '" min="' + c[3] + '" max="' + c[4] + '" step="' + c[6] + '" value="' + c[5] + '"></label>';
+      });
+      host.innerHTML = html;
+      config.forEach(function (c) {
+        var id = prefix + "-" + c[0];
+        document.getElementById(id).addEventListener("input", function () { updateSliderOutput(id); });
+      });
+    }
+
+    function updateSliderOutput(id) {
+      var el = document.getElementById(id);
+      var out = document.getElementById(id + "-out");
+      if (el && out) out.textContent = el.value + " " + out.getAttribute("data-unit");
+    }
+
+    function setSliderValues(prefix, values) {
+      Object.keys(values).forEach(function (key) {
+        var el = document.getElementById(prefix + "-" + key);
+        if (el) { el.value = values[key]; updateSliderOutput(prefix + "-" + key); }
+      });
+    }
+
+    function readSfxParams() {
+      function num(id) { return parseFloat(document.getElementById(id).value); }
+      return {
+        wave: document.getElementById("sfx-wave").value,
+        f0: num("sfx-f0"), f1: num("sfx-f1"),
+        dur: num("sfx-dur"), attack: num("sfx-attack") / 1000,
+        noise: num("sfx-noise") / 100, cutoff: num("sfx-cutoff"), vib: num("sfx-vib")
+      };
+    }
+
+    function applySfxPreset(p) {
+      document.getElementById("sfx-wave").value = p.wave;
+      setSliderValues("sfx", { f0: p.f0, f1: p.f1, dur: p.dur, attack: p.attack * 1000, noise: p.noise * 100, cutoff: p.cutoff, vib: p.vib });
+    }
+
+    /* ---------- Music generator (12-bar cozy loops) ---------- */
+
+    var MUSIC_MOODS = {
+      sunny:   { label: "Sunny Meadow",  bpm: 92,  prog: [0, 7, 9, 5], barsPerChord: 1, shaker: "backbeat", bassPulse: true  },
+      evening: { label: "Quiet Evening", bpm: 70,  prog: [0, 9, 5, 7], barsPerChord: 2, shaker: "none",     bassPulse: false },
+      playful: { label: "Playful",       bpm: 106, prog: [0, 5, 9, 7], barsPerChord: 1, shaker: "eighths",  bassPulse: true  }
+    };
+    var MUSIC_KEYS = [["C", 0], ["D", 2], ["E", 4], ["F", 5], ["G", 7], ["A", 9], ["Bb", 10], ["B", 11]];
+    var PENTA = [0, 2, 4, 7, 9];
+    var MUSIC_CONTROLS = [
+      ["bpm", "Tempo", "BPM", 66, 112, 92, 1],
+      ["density", "Melody density", "%", 20, 95, 55, 1]
+    ];
+
+    var musicMood = "sunny";
+    var musicSeed = (Math.random() * 1e9) | 0;
+
+    function drawMusic(ctx, dest, o, seed) {
+      var rnd = mulberry32(seed >>> 0);
+      var mood = MUSIC_MOODS[o.mood] || MUSIC_MOODS.sunny;
+      var bpm = Math.min(120, Math.max(60, o.bpm));
+      var beat = 60 / bpm, barLen = beat * 4, bars = 12;
+      var total = bars * barLen;
+
+      var master = ctx.createGain(); master.gain.value = 0.9;
+      var lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 7200; lp.Q.value = 0.4;
+      var dry = ctx.createGain(); dry.gain.value = 0.85;
+      var dly = ctx.createDelay(1.5); dly.delayTime.value = Math.min(1.4, beat * 0.75);
+      var fb = ctx.createGain(); fb.gain.value = 0.26;
+      var wet = ctx.createGain(); wet.gain.value = 0.15;
+      master.connect(lp); lp.connect(dry); dry.connect(dest);
+      lp.connect(dly); dly.connect(fb); fb.connect(dly); dly.connect(wet); wet.connect(dest);
+
+      function tone(freq, t, dur, type, peak, attack) {
+        if (!(freq > 0) || dur <= 0.01) return;
+        var osc = ctx.createOscillator(); osc.type = type; osc.frequency.value = freq;
+        var g = ctx.createGain();
+        var a = Math.max(0.005, Math.min(attack, dur * 0.5));
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), t + a);
+        if (dur > a + 0.09) g.gain.setValueAtTime(Math.max(0.0002, peak), t + dur - 0.08);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        osc.connect(g); g.connect(master);
+        osc.start(t); osc.stop(t + dur + 0.05);
+      }
+      function noiseTick(t, dur, peak, hpFreq) {
+        var src = ctx.createBufferSource(); src.buffer = getNoiseBuffer(ctx); src.loop = true;
+        var f = ctx.createBiquadFilter(); f.type = "highpass"; f.frequency.value = hpFreq;
+        var g = ctx.createGain();
+        g.gain.setValueAtTime(Math.max(0.0002, peak), t);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        src.connect(f); f.connect(g); g.connect(master);
+        src.start(t); src.stop(t + dur + 0.05);
+      }
+
+      var keyOff = o.key | 0;
+      function mf(semi) { return 261.626 * Math.pow(2, (keyOff + semi) / 12); }
+      var prog = mood.prog, bpc = mood.barsPerChord;
+      var penta = [];
+      for (var oc = 0; oc < 3; oc++) for (var pi = 0; pi < PENTA.length; pi++) penta.push(PENTA[pi] + oc * 12);
+      var melIdx = 7 + ((rnd() * 3) | 0);
+
+      for (var b = 0; b < bars; b++) {
+        var bt = b * barLen;
+        var chord = prog[(((b / bpc) | 0)) % prog.length];
+        if (b % bpc === 0) {
+          var clen = Math.min(bpc * barLen, total - bt);
+          var tri = [0, 4, 7, 12];
+          for (var ti = 0; ti < tri.length; ti++) {
+            tone(mf(chord + tri[ti]), bt, clen + 0.5, "triangle", 0.042, Math.min(1.1, clen * 0.35));
+          }
+          tone(mf(chord - 12), bt, Math.min(clen, barLen * 1.8), "sine", 0.10, 0.03);
+        }
+        if (mood.bassPulse) tone(mf(chord - 12), bt + beat * 2, beat * 0.9, "sine", 0.07, 0.02);
+        if (mood.shaker === "backbeat") {
+          noiseTick(bt + beat, 0.05, 0.020, 7000);
+          noiseTick(bt + beat * 3, 0.05, 0.026, 7000);
+        } else if (mood.shaker === "eighths") {
+          for (var e = 0; e < 8; e++) if (rnd() < 0.7) noiseTick(bt + e * beat / 2, 0.04, 0.014, 7500);
+        }
+        for (var s = 0; s < 8; s++) {
+          if (rnd() > o.density) continue;
+          melIdx += ((rnd() * 5) | 0) - 2;
+          if (melIdx < 3) melIdx = 3;
+          if (melIdx > penta.length - 2) melIdx = penta.length - 2;
+          var st = bt + s * beat / 2;
+          var nd = beat * (0.4 + rnd() * 0.25);
+          tone(mf(penta[melIdx]), st, nd, "triangle", 0.075, 0.008);
+          if (rnd() < 0.10) tone(mf(penta[melIdx] + 4), st, nd, "sine", 0.03, 0.01);
+        }
+      }
+      return total + 1.6;
+    }
+
+    function renderMusicBlob(o, seed) {
+      var beat = 60 / Math.min(120, Math.max(60, o.bpm));
+      var seconds = 12 * 4 * beat + 1.8, sr = 44100;
+      var off = new OfflineAudioContext(2, Math.ceil(seconds * sr), sr);
+      drawMusic(off, off.destination, o, seed);
+      return off.startRendering().then(encodeWav);
+    }
+
+    function readMusicOpts() {
+      return {
+        mood: musicMood,
+        key: parseInt(document.getElementById("music-key").value, 10),
+        bpm: parseFloat(document.getElementById("music-bpm").value),
+        density: parseFloat(document.getElementById("music-density").value) / 100
+      };
+    }
+
+    /* ---------- My Creations (custom slots) ---------- */
+
+    var creations = [];
+    var creationSeq = 1;
+    var CREATION_KEY = "audio-sampler-creations-v1";
+
+    function loadCreations() {
+      try {
+        var raw = localStorage.getItem(CREATION_KEY);
+        if (raw) { var arr = JSON.parse(raw); if (Array.isArray(arr)) creations = arr; }
+      } catch (e) { creations = []; }
+      creationSeq = creations.reduce(function (m, c) { return Math.max(m, c.seq | 0); }, 0) + 1;
+    }
+
+    function persistCreations() {
+      try {
+        localStorage.setItem(CREATION_KEY, JSON.stringify(creations.map(function (c) {
+          var o = { seq: c.seq, kind: c.kind, filename: c.filename, purpose: c.purpose, label: c.label };
+          if (c.kind === "sfx") { o.params = c.params; }
+          else { o.mood = c.mood; o.key = c.key; o.bpm = c.bpm; o.density = c.density; o.seed = c.seed; }
+          return o;
+        })));
+      } catch (e) {}
+    }
+
+    function sanitizeFilename(v, fallback) {
+      var s = String(v || "").toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      return s || fallback;
+    }
+
+    function uniqueFilename(base) {
+      var taken = {};
+      creations.forEach(function (c) { taken[c.filename] = true; });
+      var name = base, i = 2;
+      while (taken[name]) { name = base + "-" + i; i++; }
+      return name;
+    }
+
+    function nextDefaultFilename(prefix) {
+      var taken = {};
+      creations.forEach(function (c) { taken[c.filename] = true; });
+      var n = 1;
+      while (taken[prefix + "-" + n]) n++;
+      return prefix + "-" + n;
+    }
+
+    function prettyLabel(fn) {
+      return fn.split("-").map(function (w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(" ");
+    }
+
+    function renderCreations() {
+      var grid = document.getElementById("creations-grid");
+      var count = document.getElementById("creations-count");
+      var empty = document.getElementById("creations-empty");
+      count.textContent = creations.length + (creations.length === 1 ? " slot" : " slots");
+      empty.style.display = creations.length ? "none" : "";
+      grid.innerHTML = creations.map(function (c) {
+        var isSfx = c.kind === "sfx";
+        var path = isSfx ? "assets/audio/sfx/" + c.filename + ".mp3" : "assets/audio/music/" + c.filename + ".wav";
+        return '<article class="sound-card" data-seq="' + c.seq + '">' +
+          '<div class="sound-top"><h3>' + escapeHTML(c.label) + '</h3><span class="type-badge">' + (isSfx ? "SFX" : "MUSIC") + '</span></div>' +
+          '<div class="path">' + escapeHTML(path) + '</div>' +
+          '<div class="purpose">' + escapeHTML(c.purpose || "No purpose noted yet.") + '</div>' +
+          '<div class="actions">' +
+            '<button class="play-creation play-procedural" type="button">Play</button>' +
+            '<button class="dl-creation" type="button">Download WAV</button>' +
+            '<button class="rm-creation" type="button">Remove</button>' +
+          '</div></article>';
+      }).join("");
+    }
+
+    function findCreation(seq) {
+      for (var i = 0; i < creations.length; i++) if (creations[i].seq === seq) return creations[i];
+      return null;
+    }
+
+    async function playCreation(c, btn) {
+      if (c.kind === "sfx") {
+        await ensureAudio();
+        var g = audioCtx.createGain(); g.gain.value = volume; g.connect(audioCtx.destination);
+        drawSfx(audioCtx, g, c.params);
+        markPlaying(btn);
+        flash("Playing " + c.label);
+      } else {
+        flash("Rendering " + c.label + "…");
+        if (!c._url) {
+          var blob = await renderMusicBlob({ mood: c.mood, key: c.key, bpm: c.bpm, density: c.density }, c.seed);
+          c._url = URL.createObjectURL(blob);
+        }
+        if (c._audio) c._audio.pause();
+        c._audio = new Audio(c._url); c._audio.volume = volume;
+        await c._audio.play();
+        markPlaying(btn);
+        flash("Playing " + c.label);
+      }
+    }
+
+    /* ---------- Lab wiring ---------- */
+
+    buildSliders("sfx-sliders", SFX_CONTROLS, "sfx");
+    buildSliders("music-sliders", MUSIC_CONTROLS, "music");
+
+    (function buildMusicKeys() {
+      var sel = document.getElementById("music-key");
+      MUSIC_KEYS.forEach(function (k) {
+        var o = document.createElement("option");
+        o.value = k[1]; o.textContent = k[0];
+        sel.appendChild(o);
+      });
+    })();
+
+    document.getElementById("sfx-presets").addEventListener("click", function (ev) {
+      var btn = ev.target.closest("button"); if (!btn) return;
+      var p = SFX_PRESETS[btn.getAttribute("data-preset")];
+      if (p) { applySfxPreset(p); flash("Preset: " + btn.textContent.trim()); }
+    });
+
+    document.getElementById("sfx-surprise").addEventListener("click", function () {
+      var waves = ["sine", "triangle", "square", "sawtooth"];
+      var r = Math.random;
+      applySfxPreset({
+        wave: waves[(r() * waves.length) | 0],
+        f0: 120 + r() * 1200, f1: 120 + r() * 1200,
+        dur: 0.1 + r() * 0.8, attack: 0.002 + r() * 0.06,
+        noise: r() < 0.4 ? r() * 0.8 : 0,
+        cutoff: 800 + r() * 9000, vib: r() < 0.3 ? 10 + r() * 60 : 0
+      });
+      flash("Surprise sound ready — play it");
+    });
+
+    document.getElementById("sfx-play").addEventListener("click", async function () {
+      try {
+        await ensureAudio();
+        var g = audioCtx.createGain(); g.gain.value = volume; g.connect(audioCtx.destination);
+        drawSfx(audioCtx, g, readSfxParams());
+        markPlaying(this);
+        flash("Playing your sound");
+      } catch (e) { flash("Could not play."); }
+    });
+
+    document.getElementById("sfx-download").addEventListener("click", async function () {
+      flash("Rendering WAV…");
+      try {
+        var blob = await renderSfxBlob(readSfxParams());
+        downloadBlob(blob, "sfx-" + Date.now().toString(36) + ".wav");
+        flash("WAV downloaded");
+      } catch (e) { flash("Could not render."); }
+    });
+
+    document.getElementById("sfx-save").addEventListener("click", function () {
+      var filename = uniqueFilename(sanitizeFilename(document.getElementById("sfx-filename").value, "custom-sfx"));
+      var purpose = document.getElementById("sfx-purpose").value.trim();
+      creations.push({
+        seq: creationSeq++, kind: "sfx", filename: filename, purpose: purpose,
+        label: prettyLabel(filename), params: readSfxParams()
+      });
+      document.getElementById("sfx-filename").value = nextDefaultFilename("custom-sfx");
+      document.getElementById("sfx-purpose").value = "";
+      persistCreations(); renderCreations();
+      flash("Saved “" + filename + "” to My Creations");
+      document.getElementById("section-my-creations").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    document.getElementById("music-moods").addEventListener("click", function (ev) {
+      var btn = ev.target.closest("button"); if (!btn) return;
+      musicMood = btn.getAttribute("data-mood");
+      var btns = this.querySelectorAll("button");
+      for (var i = 0; i < btns.length; i++) btns[i].setAttribute("aria-pressed", btns[i] === btn ? "true" : "false");
+      var bpmEl = document.getElementById("music-bpm");
+      bpmEl.value = MUSIC_MOODS[musicMood].bpm;
+      updateSliderOutput("music-bpm");
+      musicSeed = (Math.random() * 1e9) | 0;
+      flash(MUSIC_MOODS[musicMood].label + " — new melody drafted");
+    });
+
+    document.getElementById("music-regen").addEventListener("click", function () {
+      musicSeed = (Math.random() * 1e9) | 0;
+      flash("New melody drafted — play it");
+    });
+
+    var musicPreviewUrl = null, musicPreviewAudio = null;
+    document.getElementById("music-play").addEventListener("click", async function () {
+      flash("Rendering your track…");
+      try {
+        var blob = await renderMusicBlob(readMusicOpts(), musicSeed);
+        if (musicPreviewUrl) URL.revokeObjectURL(musicPreviewUrl);
+        musicPreviewUrl = URL.createObjectURL(blob);
+        if (musicPreviewAudio) musicPreviewAudio.pause();
+        musicPreviewAudio = new Audio(musicPreviewUrl);
+        musicPreviewAudio.volume = volume;
+        await musicPreviewAudio.play();
+        markPlaying(this);
+        flash("Playing your track");
+      } catch (e) { flash("Could not render the track."); }
+    });
+
+    document.getElementById("music-download").addEventListener("click", async function () {
+      flash("Rendering WAV…");
+      try {
+        var blob = await renderMusicBlob(readMusicOpts(), musicSeed);
+        downloadBlob(blob, "track-" + Date.now().toString(36) + ".wav");
+        flash("WAV downloaded");
+      } catch (e) { flash("Could not render."); }
+    });
+
+    document.getElementById("music-save").addEventListener("click", function () {
+      var filename = uniqueFilename(sanitizeFilename(document.getElementById("music-filename").value, "custom-track"));
+      var purpose = document.getElementById("music-purpose").value.trim();
+      var o = readMusicOpts();
+      creations.push({
+        seq: creationSeq++, kind: "music", filename: filename, purpose: purpose,
+        label: prettyLabel(filename), mood: o.mood, key: o.key, bpm: o.bpm, density: o.density, seed: musicSeed
+      });
+      document.getElementById("music-filename").value = nextDefaultFilename("custom-track");
+      document.getElementById("music-purpose").value = "";
+      persistCreations(); renderCreations();
+      flash("Saved “" + filename + "” to My Creations");
+      document.getElementById("section-my-creations").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    document.getElementById("creations-grid").addEventListener("click", async function (ev) {
+      var btn = ev.target.closest("button"); if (!btn) return;
+      var card = btn.closest("[data-seq]"); if (!card) return;
+      var c = findCreation(parseInt(card.getAttribute("data-seq"), 10));
+      if (!c) return;
+      if (btn.classList.contains("play-creation")) {
+        try { await playCreation(c, btn); } catch (e) { flash("Could not play."); }
+      } else if (btn.classList.contains("dl-creation")) {
+        flash("Rendering WAV…");
+        try {
+          var blob = c.kind === "sfx"
+            ? await renderSfxBlob(c.params)
+            : await renderMusicBlob({ mood: c.mood, key: c.key, bpm: c.bpm, density: c.density }, c.seed);
+          downloadBlob(blob, c.filename + ".wav");
+          flash("WAV downloaded");
+        } catch (e) { flash("Could not render."); }
+      } else if (btn.classList.contains("rm-creation")) {
+        if (c._url) URL.revokeObjectURL(c._url);
+        creations = creations.filter(function (x) { return x.seq !== c.seq; });
+        persistCreations(); renderCreations();
+        flash("Removed " + c.filename);
+      }
+    });
+
+    loadCreations();
+    renderCreations();
   </script>
 </body>
 </html>
