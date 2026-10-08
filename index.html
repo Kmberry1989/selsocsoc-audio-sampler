@@ -190,6 +190,8 @@
     .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; }
     .status.loaded .status-dot { background: var(--secondary); }
     .status.loaded { color: var(--ink); }
+    .status.in-game .status-dot { background: var(--secondary); }
+    .status.in-game { color: var(--ink); }
     .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
     .play-procedural { grid-column: 1 / -1; }
     button {
@@ -274,20 +276,20 @@
   <header class="masthead">
     <div class="masthead-inner">
       <h1>Audio Sampler</h1>
-      <p>Audition every procedural sound in Selfie Social Society, then load a replacement locally for a direct A/B listen.</p>
+      <p>Audition every procedural sound effect and music track in Selfie Social Society, then load a replacement locally for a direct A/B listen.</p>
     </div>
   </header>
 
   <div class="controls-wrap">
     <div class="controls">
       <div class="control">
-        <label for="sound-jump"><span>Jump to file</span><span>30 slots</span></label>
+        <label for="sound-jump"><span>Jump to file</span><span>36 slots</span></label>
         <select id="sound-jump" aria-label="Jump to a replacement file">
           <option value="">Choose an intended filename…</option>
         </select>
       </div>
       <div class="control">
-        <div class="control-label"><span>Global volume</span><span>Procedural + uploads</span></div>
+        <div class="control-label"><span>Global volume</span><span>SFX + music + uploads</span></div>
         <div class="volume-row">
           <input id="master-volume" type="range" min="0" max="100" value="70" aria-label="Global volume">
           <output class="value" id="volume-value" for="master-volume">70%</output>
@@ -297,7 +299,7 @@
   </div>
 
   <main>
-    <p class="intro-note"><strong>Nothing is installed yet.</strong> Each slot starts with its real procedural sound. Uploaded files stay only in this open page.</p>
+    <p class="intro-note"><strong>Nothing is installed yet.</strong> Each SFX slot starts with its real procedural sound; the six music tracks are the actual files shipped in the game. Uploaded files stay only in this open page.</p>
     <div id="catalog"></div>
   </main>
   <div class="audio-state" id="audio-state" role="status" aria-live="polite"></div>
@@ -1188,6 +1190,11 @@ class ProceduralCatAudioEngine {
     var cats = new ProceduralCatAudioEngine(function () { return audioCtx; }, 0.16);
 
     var categories = [
+      { name: "Music", engine: "music", unit: "track", sounds: [
+        ["board-game", "board-game", "Board Game"], ["home", "home", "Home"],
+        ["minigames", "minigames", "Minigames"], ["plaza", "plaza", "Plaza"],
+        ["shops", "shops", "Shops"], ["title-screen", "title-screen", "Title Screen"]
+      ]},
       { name: "Player Emotes", engine: "emotes", sounds: [
         ["laugh", "emote-laugh", "Laugh"], ["grunt", "emote-grunt", "Grunt"],
         ["confusion", "emote-confusion", "Confusion"], ["question", "emote-question", "Question"],
@@ -1219,6 +1226,8 @@ class ProceduralCatAudioEngine {
     var engines = { emotes: emotes, suite: suite, cats: cats };
     var baseGains = { emotes: 0.18, suite: 0.38, cats: 0.16 };
     var uploads = Object.create(null);
+    var musicTracks = Object.create(null);
+    var activeMusic = null;
     var activeUpload = null;
     var noticeTimer = null;
     var volume = 0.70;
@@ -1244,8 +1253,20 @@ class ProceduralCatAudioEngine {
           var cardId = "sound-" + fileId;
           var option = document.createElement("option");
           option.value = cardId;
-          option.textContent = fileId + ".mp3 — " + friendly;
+          var isMusic = category.engine === "music";
+          option.textContent = fileId + (isMusic ? ".wav" : ".mp3") + " — " + friendly;
           jump.appendChild(option);
+          if (isMusic) {
+            return '<article class="sound-card" id="' + cardId + '" data-file-id="' + fileId + '" data-engine="music" data-method="' + method + '">' +
+              '<div class="sound-top"><h3>' + escapeHTML(friendly) + '</h3><span class="method">.wav</span></div>' +
+              '<div class="path">assets/audio/music/' + escapeHTML(fileId) + '.wav</div>' +
+              '<div class="status in-game"><span class="status-dot"></span><span class="status-text">In the game</span></div>' +
+              '<div class="actions">' +
+                '<button class="play-track" type="button">Play track</button>' +
+                '<label class="upload-control"><span class="upload-caption">Upload replacement</span><input class="file-input" type="file" accept="audio/*" aria-label="Upload replacement for ' + escapeHTML(friendly) + '"></label>' +
+                '<button class="play-mine" type="button" disabled>Play mine</button>' +
+              '</div></article>';
+          }
           return '<article class="sound-card" id="' + cardId + '" data-file-id="' + fileId + '" data-engine="' + category.engine + '" data-method="' + method + '">' +
             '<div class="sound-top"><h3>' + escapeHTML(friendly) + '</h3><span class="method">.' + escapeHTML(method) + '()</span></div>' +
             '<div class="path">assets/audio/sfx/' + escapeHTML(fileId) + '.mp3</div>' +
@@ -1256,7 +1277,7 @@ class ProceduralCatAudioEngine {
               '<button class="play-mine" type="button" disabled>Play mine</button>' +
             '</div></article>';
         }).join("");
-        section.innerHTML = '<div class="section-heading"><h2>' + escapeHTML(category.name) + '</h2><span class="section-rule"></span><span class="section-count">' + category.sounds.length + (category.sounds.length === 1 ? ' sound' : ' sounds') + '</span></div><div class="grid">' + cards + '</div>';
+        section.innerHTML = '<div class="section-heading"><h2>' + escapeHTML(category.name) + '</h2><span class="section-rule"></span><span class="section-count">' + category.sounds.length + ' ' + (category.unit || "sound") + (category.sounds.length === 1 ? '' : 's') + '</span></div><div class="grid">' + cards + '</div>';
         catalog.appendChild(section);
       });
     }
@@ -1278,6 +1299,8 @@ class ProceduralCatAudioEngine {
         if (engine.output && engine.output.gain) engine.output.gain.setValueAtTime(engine.outputGain, audioCtx ? audioCtx.currentTime : 0);
       });
       Object.keys(uploads).forEach(function (fileId) { uploads[fileId].audio.volume = volume; });
+      Object.keys(musicTracks).forEach(function (fileId) { musicTracks[fileId].volume = volume; });
+      if (activeMusic) activeMusic.volume = volume;
     }
 
     function flash(message) {
@@ -1317,6 +1340,25 @@ class ProceduralCatAudioEngine {
       var card = button.closest(".sound-card");
       if (!card) return;
       var fileId = card.dataset.fileId;
+      if (button.classList.contains("play-track")) {
+        try {
+          var track = musicTracks[fileId];
+          if (!track) {
+            track = new Audio("music/" + fileId + ".wav");
+            track.preload = "auto";
+            musicTracks[fileId] = track;
+          }
+          if (activeMusic && activeMusic !== track) { activeMusic.pause(); activeMusic.currentTime = 0; }
+          track.currentTime = 0;
+          track.volume = volume;
+          await track.play();
+          activeMusic = track;
+          markPlaying(button);
+          flash("Playing track: " + fileId);
+        } catch (error) {
+          flash("This track could not play.");
+        }
+      }
       if (button.classList.contains("play-procedural")) {
         try {
           await ensureAudio();
@@ -1362,7 +1404,8 @@ class ProceduralCatAudioEngine {
       card.querySelector(".play-mine").disabled = false;
       var status = card.querySelector(".status");
       status.classList.add("loaded");
-      var expected = fileId + ".mp3";
+      var isMusicCard = card.dataset.engine === "music";
+      var expected = fileId + (isMusicCard ? ".wav" : ".mp3");
       var differs = file.name.toLowerCase() !== expected.toLowerCase();
       status.querySelector(".status-text").textContent = "Loaded: " + file.name + (differs ? " (filename differs)" : "");
       flash("Replacement loaded for " + fileId);
