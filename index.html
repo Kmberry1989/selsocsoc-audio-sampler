@@ -401,6 +401,10 @@
       <section class="section" id="section-my-creations">
         <div class="section-heading"><h2>My Creations</h2><span class="section-rule"></span><span class="section-count" id="creations-count">0 slots</span></div>
         <p class="lab-note" id="creations-empty">Nothing saved yet — generate something in the labs above.</p>
+        <div class="lab-actions">
+          <button type="button" id="export-game-pack">Export game music pack</button>
+        </div>
+        <p class="lab-hint">Packages saved music tracks named for game scenes (title-screen, home, plaza, shops, minigames, board-game) into one ZIP download.</p>
         <div class="grid" id="creations-grid"></div>
       </section>
     </div>
@@ -2033,6 +2037,121 @@ class ProceduralCatAudioEngine {
         persistCreations(); renderCreations();
         flash("Removed " + c.filename);
       }
+    });
+
+    /* ---------- Game music pack export ---------- */
+
+    var GAME_SCENES = ["title-screen", "home", "plaza", "shops", "minigames", "board-game"];
+
+    function sceneFromText(text) {
+      var t = String(text || "").toLowerCase();
+      var hits = [];
+      if (/(^|[^a-z])title(\s|-)+screen([^a-z]|$)/.test(t)) hits.push("title-screen");
+      if (/(^|[^a-z])plaza([^a-z]|$)/.test(t)) hits.push("plaza");
+      if (/(^|[^a-z])board(\s|-)+game([^a-z]|$)/.test(t)) hits.push("board-game");
+      if (/(^|[^a-z])minigames?([^a-z]|$)/.test(t)) hits.push("minigames");
+      if (/(^|[^a-z])shops?([^a-z]|$)/.test(t)) hits.push("shops");
+      if (/(^|[^a-z])home([^a-z]|$)/.test(t)) hits.push("home");
+      return hits.length === 1 ? hits[0] : null;
+    }
+
+    function sceneForCreation(c) {
+      if (!c || c.kind !== "music") return null;
+      var fn = String(c.filename || "").toLowerCase();
+      if (GAME_SCENES.indexOf(fn) !== -1) return fn;
+      return sceneFromText(c.purpose);
+    }
+
+    function crc32bytes(bytes) {
+      var table = crc32bytes.table;
+      if (!table) {
+        table = crc32bytes.table = new Int32Array(256);
+        for (var n = 0; n < 256; n++) {
+          var cc = n;
+          for (var k = 0; k < 8; k++) cc = (cc & 1) ? (0xEDB88320 ^ (cc >>> 1)) : (cc >>> 1);
+          table[n] = cc;
+        }
+      }
+      var crc = 0xFFFFFFFF;
+      for (var i = 0; i < bytes.length; i++) crc = table[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+      return (crc ^ 0xFFFFFFFF) >>> 0;
+    }
+
+    function buildStoredZip(entries) {
+      var enc = new TextEncoder();
+      var parts = [], central = [], offset = 0;
+      entries.forEach(function (e) {
+        var nameBytes = enc.encode(e.name);
+        var crc = crc32bytes(e.data);
+        var lh = new DataView(new ArrayBuffer(30));
+        lh.setUint32(0, 0x04034b50, true);
+        lh.setUint16(4, 20, true);
+        lh.setUint16(6, 0x0800, true);
+        lh.setUint16(8, 0, true);
+        lh.setUint16(10, 0, true); lh.setUint16(12, 0, true);
+        lh.setUint32(14, crc, true);
+        lh.setUint32(18, e.data.length, true);
+        lh.setUint32(22, e.data.length, true);
+        lh.setUint16(26, nameBytes.length, true);
+        lh.setUint16(28, 0, true);
+        parts.push(new Uint8Array(lh.buffer), nameBytes, e.data);
+        var ch = new DataView(new ArrayBuffer(46));
+        ch.setUint32(0, 0x02014b50, true);
+        ch.setUint16(4, 20, true); ch.setUint16(6, 20, true);
+        ch.setUint16(8, 0x0800, true);
+        ch.setUint16(10, 0, true);
+        ch.setUint16(12, 0, true); ch.setUint16(14, 0, true);
+        ch.setUint32(16, crc, true);
+        ch.setUint32(20, e.data.length, true);
+        ch.setUint32(24, e.data.length, true);
+        ch.setUint16(28, nameBytes.length, true);
+        ch.setUint16(30, 0, true); ch.setUint16(32, 0, true);
+        ch.setUint16(34, 0, true); ch.setUint16(36, 0, true);
+        ch.setUint32(38, 0, true);
+        ch.setUint32(42, offset, true);
+        central.push(new Uint8Array(ch.buffer), nameBytes);
+        offset += 30 + nameBytes.length + e.data.length;
+      });
+      var centralStart = offset, centralSize = 0;
+      central.forEach(function (p) { centralSize += p.length; });
+      var end = new DataView(new ArrayBuffer(22));
+      end.setUint32(0, 0x06054b50, true);
+      end.setUint16(8, entries.length, true);
+      end.setUint16(10, entries.length, true);
+      end.setUint32(12, centralSize, true);
+      end.setUint32(16, centralStart, true);
+      end.setUint16(20, 0, true);
+      var out = new Uint8Array(centralStart + centralSize + 22);
+      var pos = 0;
+      parts.concat(central).forEach(function (p) { out.set(p, pos); pos += p.length; });
+      out.set(new Uint8Array(end.buffer), pos);
+      return new Blob([out], { type: "application/zip" });
+    }
+
+    document.getElementById("export-game-pack").addEventListener("click", async function () {
+      var byScene = {};
+      creations.forEach(function (c) {
+        var s = sceneForCreation(c);
+        if (s && (!byScene[s] || (c.seq | 0) > (byScene[s].seq | 0))) byScene[s] = c;
+      });
+      var scenes = GAME_SCENES.filter(function (s) { return byScene[s]; });
+      if (!scenes.length) {
+        flash("No scene tracks saved yet — save a track named for a scene, like “title-screen”.");
+        return;
+      }
+      flash("Rendering " + scenes.length + " track" + (scenes.length === 1 ? "" : "s") + "…");
+      try {
+        var entries = [];
+        for (var i = 0; i < scenes.length; i++) {
+          var c = byScene[scenes[i]];
+          var blob = await renderMusicBlob({ mood: c.mood, key: c.key, bpm: c.bpm, density: c.density }, c.seed);
+          var buf = new Uint8Array(await blob.arrayBuffer());
+          entries.push({ name: scenes[i] + ".wav", data: buf });
+          flash("Rendered " + (i + 1) + " of " + scenes.length + "…");
+        }
+        downloadBlob(buildStoredZip(entries), "game-music-pack.zip");
+        flash("Game music pack downloaded (" + scenes.length + " tracks)");
+      } catch (e) { flash("Could not build the pack."); }
     });
 
     loadCreations();
