@@ -24,10 +24,25 @@ file exists yet.
   style; pick a mood (Sunny Meadow, Quiet Evening, Playful), key, tempo, and
   melody density, then draft new melodies
 - Both labs play instantly and download real WAV files
+- **Sound Recipes** — 15 selectable synth recipes built from sine, square,
+  sawtooth, and triangle tones, plus four formant voices (Ah, Ee, Oo, Eh);
+  play, download, or save any of them as a new slot
+- **Foley FX** — 8 procedural foley starters (footstep, whoosh, pop, splash,
+  magic sparkle, UI blip, impact, riser) with instant play + WAV download
+- **Loop Sequencer** — 16- or 32-step sequencer with 6 instrument rows
+  (kick, snare, hats, bass, chord stab, lead/arp); tap a step to cycle
+  off → 4 sound variants, each in its own color. Built-in effects rack
+  (distortion, 8-bit crunch, LFO, echo, sustain, resonance, reverb) works
+  live during preview and bakes into WAVs. Preview has loop autoplay + stop;
+  save the pattern as a new music slot
 - **Save as new slot** — give a creation its own filename and purpose (e.g.
   what game moment it belongs to); it lands in **My Creations** with its
   intended game path (`assets/audio/sfx/<name>.mp3` or
   `assets/audio/music/<name>.wav`), and persists across visits
+- **Export game music pack** — one click zips every saved music track whose
+  filename or purpose names a game scene (title-screen, home, plaza, shops,
+  minigames, board-game) into `game-music-pack.zip`; newest track wins per
+  scene, anything ambiguous is left out
 
 ## Run it
 Open `index.html` in a browser — it's self-contained apart from the `music/`

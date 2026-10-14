@@ -273,6 +273,35 @@
       transition: opacity .18s ease, transform .18s ease;
     }
     .audio-state.show { opacity: 1; transform: translateY(0); }
+    .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-bottom: 14px; }
+    .recipe-grid button { min-height: 44px; padding: 8px 10px; font-size: .82rem; }
+    .recipe-grid button[aria-pressed="true"] { outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent); }
+    .recipe-meta { color: var(--muted); font-size: .82rem; margin: 0 0 14px; }
+    .foley-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+    .foley-card { background: var(--panel-2); border-radius: 12px; padding: 12px; }
+    .foley-card h4 { margin: 0 0 4px; font-size: 1rem; }
+    .foley-card p { margin: 0 0 10px; color: var(--muted); font-size: .78rem; }
+    .foley-card .lab-actions { display: flex; gap: 8px; }
+    .foley-card .lab-actions button { flex: 1; min-height: 44px; font-size: .8rem; }
+    .seq-wrap { overflow-x: auto; padding-bottom: 6px; }
+    .seq-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; min-width: max-content; }
+    .seq-row-label { flex: 0 0 92px; font-size: .74rem; font-weight: 700; }
+    .seq-cells { display: flex; gap: 4px; }
+    .seq-cell { flex: 0 0 42px; min-height: 42px; border-radius: 8px; font-size: .72rem; font-weight: 700; padding: 0; }
+    .seq-cell.v0 { opacity: .5; }
+    .seq-cell.v1 { background: #ffb020; color: #231a05; opacity: 1; }
+    .seq-cell.v2 { background: #2dd4bf; color: #06302b; opacity: 1; }
+    .seq-cell.v3 { background: #a78bfa; color: #241b4d; opacity: 1; }
+    .seq-cell.v4 { background: #f472b6; color: #3d1030; opacity: 1; }
+    .seq-cell.is-hidden { display: none; }
+    .seq-legend { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0 0; color: var(--muted); font-size: .76rem; }
+    .seq-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 4px; vertical-align: -1px; }
+    .fx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0 14px; }
+    .seq-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin-bottom: 14px; }
+    .seq-toolbar .lab-field { margin: 0; min-width: 120px; }
+    .seq-toolbar .lab-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .seq-toolbar .lab-actions button { min-height: 44px; }
+    #seq-loop[aria-pressed="true"] { outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent); }
     @media (max-width: 720px) {
       .controls { grid-template-columns: 1fr; gap: 10px; }
       .control label, .control .control-label { margin-bottom: 4px; }
@@ -396,6 +425,77 @@
             <button type="button" id="music-save" class="play-procedural">Save as new slot</button>
             <p class="lab-hint">Lands in My Creations as <code>assets/audio/music/&lt;filename&gt;.wav</code></p>
           </article>
+        </div>
+      </section>
+      <section class="section" id="section-recipes">
+        <div class="section-heading"><h2>Sound Recipes</h2><span class="section-rule"></span><span class="section-count" id="recipes-count"></span></div>
+        <p class="lab-note">A starter library of synth recipes — sine, square, sawtooth and triangle tones, plus four formant voices. Pick one, play it, download the WAV, or save it as a brand-new slot.</p>
+        <div class="recipe-grid" id="recipe-grid"></div>
+        <p class="recipe-meta" id="recipe-meta"></p>
+        <div class="lab-grid">
+          <article class="sound-card">
+            <div class="sound-top"><h3>Keep it</h3></div>
+            <div class="lab-actions">
+              <button type="button" id="recipe-play" class="play-procedural">Play</button>
+              <button type="button" id="recipe-download">Download WAV</button>
+            </div>
+            <label class="lab-field"><span>Filename</span><input id="recipe-filename" type="text" value="custom-recipe-1" spellcheck="false" autocomplete="off"></label>
+            <label class="lab-field"><span>Purpose</span><input id="recipe-purpose" type="text" maxlength="90" autocomplete="off"></label>
+            <button type="button" id="recipe-save" class="play-procedural">Save as new slot</button>
+            <p class="lab-hint">Lands in My Creations as <code>assets/audio/sfx/&lt;filename&gt;.mp3</code></p>
+          </article>
+        </div>
+      </section>
+      <section class="section" id="section-foley">
+        <div class="section-heading"><h2>Foley FX</h2><span class="section-rule"></span><span class="section-count">8 starters</span></div>
+        <p class="lab-note">Procedural foley starters — play one straight from the card or download the WAV for the game.</p>
+        <div class="foley-grid" id="foley-grid"></div>
+      </section>
+      <section class="section" id="section-sequencer">
+        <div class="section-heading"><h2>Loop Sequencer</h2><span class="section-rule"></span><span class="section-count">16 / 32 steps</span></div>
+        <p class="lab-note">Build a loop step by step. Tap a step to cycle it: off, then four sound variants — each variant shows in its own color behind the step number.</p>
+        <div class="seq-toolbar">
+          <label class="lab-field"><span>Steps</span>
+            <select id="seq-steps">
+              <option value="16" selected>16 steps</option>
+              <option value="32">32 steps</option>
+            </select>
+          </label>
+          <label class="lab-field"><span>Key</span><select id="seq-key"></select></label>
+          <label class="lab-field"><span>Tempo <output id="seq-bpm-out">100 BPM</output></span>
+            <input type="range" id="seq-bpm" min="70" max="140" step="1" value="100">
+          </label>
+          <div class="lab-actions">
+            <button type="button" id="seq-regen" class="play-procedural">New pattern</button>
+            <button type="button" id="seq-clear">Clear</button>
+          </div>
+        </div>
+        <div class="seq-wrap"><div id="seq-grid"></div></div>
+        <p class="seq-legend"><span><i style="background:#2a2f3a"></i>off</span><span><i style="background:#ffb020"></i>variant 1</span><span><i style="background:#2dd4bf"></i>variant 2</span><span><i style="background:#a78bfa"></i>variant 3</span><span><i style="background:#f472b6"></i>variant 4</span></p>
+        <div class="sound-card" style="margin-top:16px">
+          <div class="sound-top"><h3>Effects rack</h3></div>
+          <p class="lab-hint">Live while the loop plays, and baked into every WAV you download or save.</p>
+          <div class="fx-grid" id="fx-sliders"></div>
+          <label class="lab-field" style="max-width:220px"><span>LFO target</span>
+            <select id="fx-lfo-target">
+              <option value="filter" selected>Filter sweep</option>
+              <option value="amplitude">Tremolo (volume)</option>
+              <option value="pitch">Pitch wobble</option>
+            </select>
+          </label>
+        </div>
+        <div class="sound-card" style="margin-top:14px">
+          <div class="sound-top"><h3>Preview &amp; keep</h3></div>
+          <div class="lab-actions">
+            <button type="button" id="seq-play" class="play-procedural">Play</button>
+            <button type="button" id="seq-loop" aria-pressed="false">Loop: off</button>
+            <button type="button" id="seq-stop">Stop</button>
+            <button type="button" id="seq-download">Download WAV</button>
+          </div>
+          <label class="lab-field"><span>Filename</span><input id="seq-filename" type="text" value="custom-seq-1" spellcheck="false" autocomplete="off"></label>
+          <label class="lab-field"><span>Purpose</span><input id="seq-purpose" type="text" maxlength="90" autocomplete="off"></label>
+          <button type="button" id="seq-save" class="play-procedural">Save as new slot</button>
+          <p class="lab-hint">Lands in My Creations as <code>assets/audio/music/&lt;filename&gt;.wav</code> — name it for a game scene to include it in the export pack.</p>
         </div>
       </section>
       <section class="section" id="section-my-creations">
@@ -1601,37 +1701,7 @@ class ProceduralCatAudioEngine {
     ];
 
     function drawSfx(ctx, dest, p, t0) {
-      var t = (typeof t0 === "number") ? t0 : ctx.currentTime + 0.02;
-      var dur = Math.max(0.05, p.dur);
-      var osc = ctx.createOscillator();
-      osc.type = p.wave;
-      osc.frequency.setValueAtTime(Math.max(20, p.f0), t);
-      osc.frequency.exponentialRampToValueAtTime(Math.max(20, p.f1), t + dur);
-      if (p.vib > 0.5) {
-        var lfo = ctx.createOscillator(); lfo.type = "sine"; lfo.frequency.value = 28;
-        var lg = ctx.createGain(); lg.gain.value = p.vib;
-        lfo.connect(lg); lg.connect(osc.frequency);
-        lfo.start(t); lfo.stop(t + dur + 0.05);
-      }
-      var amp = ctx.createGain();
-      amp.gain.setValueAtTime(0.0001, t);
-      amp.gain.exponentialRampToValueAtTime(0.85, t + Math.max(0.002, p.attack));
-      amp.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      var filt = ctx.createBiquadFilter();
-      filt.type = "lowpass"; filt.frequency.value = p.cutoff; filt.Q.value = 0.7;
-      osc.connect(filt); filt.connect(amp); amp.connect(dest);
-      osc.start(t); osc.stop(t + dur + 0.05);
-      if (p.noise > 0.01) {
-        var src = ctx.createBufferSource(); src.buffer = getNoiseBuffer(ctx); src.loop = true;
-        var nf = ctx.createBiquadFilter();
-        nf.type = "bandpass"; nf.frequency.value = Math.min(9000, p.cutoff); nf.Q.value = 0.6;
-        var ng = ctx.createGain();
-        ng.gain.setValueAtTime(p.noise * 0.7, t);
-        ng.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-        src.connect(nf); nf.connect(ng); ng.connect(dest);
-        src.start(t); src.stop(t + dur + 0.05);
-      }
-      return dur;
+      return drawRecipe(ctx, dest, p, t0);
     }
 
     function renderSfxBlob(p) {
@@ -1795,6 +1865,680 @@ class ProceduralCatAudioEngine {
       };
     }
 
+    /* ---------- Sound recipes, formant voices, FX rack, loop sequencer ---------- */
+    /* PURE-START */
+    var FORMANTS = [
+      null,
+      { name: "Ah", f: [730, 1090, 2440], q: [7, 9, 11] },
+      { name: "Ee", f: [270, 2290, 3010], q: [9, 11, 13] },
+      { name: "Oo", f: [300, 870, 2240], q: [7, 9, 11] },
+      { name: "Eh", f: [530, 1840, 2480], q: [8, 10, 12] }
+    ];
+
+    var RECIPES = [
+      { id: "sub-boom", name: "Sub Boom", wave: "sine", f0: 55, f1: 38, dur: 0.9, attack: 0.01, noise: 0, cutoff: 900, vib: 0, formant: 0, detune: 0, sub: 0.8, blurb: "Deep sine sub drop for bass." },
+      { id: "saw-bass", name: "Saw Bass", wave: "sawtooth", f0: 82, f1: 82, dur: 0.5, attack: 0.008, noise: 0, cutoff: 900, vib: 0, formant: 0, detune: 12, sub: 0, blurb: "Detuned saw bass with bite." },
+      { id: "pluck-bass", name: "Pluck Bass", wave: "square", f0: 110, f1: 55, dur: 0.28, attack: 0.004, noise: 0, cutoff: 1200, vib: 0, formant: 0, detune: 0, sub: 0, blurb: "Short punchy bass pluck." },
+      { id: "soft-lead", name: "Soft Lead", wave: "sine", f0: 440, f1: 660, dur: 0.8, attack: 0.02, noise: 0, cutoff: 5000, vib: 25, formant: 1, detune: 0, sub: 0, blurb: "Gentle vocal-like lead (Ah formant)." },
+      { id: "retro-lead", name: "Retro Lead", wave: "square", f0: 330, f1: 495, dur: 0.6, attack: 0.006, noise: 0, cutoff: 2800, vib: 0, formant: 0, detune: 8, sub: 0, blurb: "Chiptune-style square lead." },
+      { id: "buzz-lead", name: "Buzz Lead", wave: "sawtooth", f0: 220, f1: 440, dur: 0.7, attack: 0.01, noise: 0, cutoff: 3500, vib: 30, formant: 0, detune: 0, sub: 0, blurb: "Wobbly saw lead." },
+      { id: "warm-pad", name: "Warm Pad", wave: "triangle", f0: 220, f1: 220, dur: 2.0, attack: 0.4, noise: 0, cutoff: 2400, vib: 0, formant: 0, detune: 6, sub: 0.2, blurb: "Slow-attacking warm pad." },
+      { id: "airy-pad", name: "Airy Pad", wave: "sine", f0: 330, f1: 330, dur: 2.2, attack: 0.6, noise: 0.1, cutoff: 4000, vib: 0, formant: 2, detune: 10, sub: 0, blurb: "Breathy pad (Ee formant)." },
+      { id: "choir-ish", name: "Choir-ish", wave: "triangle", f0: 262, f1: 262, dur: 1.8, attack: 0.3, noise: 0, cutoff: 3000, vib: 12, formant: 1, detune: 15, sub: 0.3, blurb: "Choir-like detuned voices (Ah)." },
+      { id: "nylon-pluck", name: "Nylon Pluck", wave: "triangle", f0: 523, f1: 523, dur: 0.35, attack: 0.003, noise: 0, cutoff: 2500, vib: 0, formant: 0, detune: 0, sub: 0, blurb: "Soft guitar-ish pluck." },
+      { id: "bright-pluck", name: "Bright Pluck", wave: "square", f0: 659, f1: 659, dur: 0.25, attack: 0.003, noise: 0, cutoff: 4000, vib: 0, formant: 0, detune: 6, sub: 0, blurb: "Sparkly bright pluck." },
+      { id: "tom-hit", name: "Tom Hit", wave: "sine", f0: 180, f1: 70, dur: 0.4, attack: 0.003, noise: 0.1, cutoff: 1500, vib: 0, formant: 0, detune: 0, sub: 0.4, blurb: "Pitched drum tom." },
+      { id: "zap", name: "Zap", wave: "sawtooth", f0: 1200, f1: 200, dur: 0.3, attack: 0.004, noise: 0, cutoff: 5000, vib: 40, formant: 0, detune: 0, sub: 0, blurb: "Laser zap sweep." },
+      { id: "sparkle", name: "Sparkle", wave: "sine", f0: 1568, f1: 2637, dur: 0.5, attack: 0.01, noise: 0, cutoff: 8000, vib: 0, formant: 2, detune: 0, sub: 0, blurb: "Glittery high shimmer (Ee)." },
+      { id: "thump", name: "Thump", wave: "triangle", f0: 90, f1: 45, dur: 0.5, attack: 0.004, noise: 0.1, cutoff: 800, vib: 0, formant: 0, detune: 0, sub: 0.9, blurb: "Low sub thump." }
+    ];
+
+    var FOLEY = [
+      { id: "footstep", name: "Footstep", desc: "Soft thud for a single step.", wave: "sine", f0: 120, f1: 60, dur: 0.12, attack: 0.003, noise: 0.9, cutoff: 500, vib: 0, formant: 0, detune: 0, sub: 0.3 },
+      { id: "whoosh", name: "Whoosh", desc: "Air rush for jumps and transitions.", wave: "sine", f0: 300, f1: 80, dur: 0.7, attack: 0.08, noise: 0.8, cutoff: 1800, vib: 0, formant: 0, detune: 0, sub: 0 },
+      { id: "pop", name: "Pop", desc: "Bright pop for pickups.", wave: "triangle", f0: 600, f1: 180, dur: 0.12, attack: 0.003, noise: 0.4, cutoff: 2500, vib: 0, formant: 0, detune: 0, sub: 0 },
+      { id: "splash", name: "Splash", desc: "Watery splash.", wave: "sine", f0: 400, f1: 150, dur: 0.8, attack: 0.02, noise: 0.95, cutoff: 3000, vib: 0, formant: 0, detune: 0, sub: 0 },
+      { id: "magic-sparkle", name: "Magic Sparkle", desc: "Glittery shimmer for spells.", wave: "sine", f0: 2000, f1: 4000, dur: 0.6, attack: 0.01, noise: 0, cutoff: 9000, vib: 50, formant: 2, detune: 0, sub: 0 },
+      { id: "ui-blip", name: "UI Blip", desc: "Tiny interface click.", wave: "square", f0: 880, f1: 880, dur: 0.09, attack: 0.002, noise: 0, cutoff: 6000, vib: 0, formant: 0, detune: 0, sub: 0 },
+      { id: "impact", name: "Impact", desc: "Heavy landing thud.", wave: "sine", f0: 100, f1: 35, dur: 0.9, attack: 0.004, noise: 0.5, cutoff: 700, vib: 0, formant: 0, detune: 0, sub: 1.0 },
+      { id: "riser", name: "Riser", desc: "Rising sweep into a reveal.", wave: "sawtooth", f0: 200, f1: 1600, dur: 1.4, attack: 0.02, noise: 0.3, cutoff: 6000, vib: 0, formant: 0, detune: 0, sub: 0 }
+    ];
+
+    function drawRecipe(ctx, dest, p, t0) {
+      var t = (typeof t0 === "number") ? t0 : ctx.currentTime + 0.02;
+      var dur = Math.max(0.05, p.dur);
+      var formant = p.formant | 0;
+      var detune = p.detune | 0;
+      var sub = p.sub || 0;
+      function voice(type, det) {
+        var osc = ctx.createOscillator();
+        osc.type = type;
+        osc.frequency.setValueAtTime(Math.max(20, p.f0), t);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(20, p.f1), t + dur);
+        if (det) osc.detune.value = det;
+        if (p.vib > 0.5) {
+          var lfo = ctx.createOscillator(); lfo.type = "sine"; lfo.frequency.value = 28;
+          var lg = ctx.createGain(); lg.gain.value = p.vib;
+          lfo.connect(lg); lg.connect(osc.frequency);
+          lfo.start(t); lfo.stop(t + dur + 0.05);
+        }
+        return osc;
+      }
+      var filt = ctx.createBiquadFilter();
+      filt.type = "lowpass"; filt.frequency.value = p.cutoff; filt.Q.value = 0.7;
+      var amp = ctx.createGain();
+      amp.gain.setValueAtTime(0.0001, t);
+      amp.gain.exponentialRampToValueAtTime(0.85, t + Math.max(0.002, p.attack));
+      amp.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      var head = filt;
+      if (formant > 0 && FORMANTS[formant]) {
+        var bank = ctx.createGain();
+        var fm = FORMANTS[formant];
+        for (var i = 0; i < fm.f.length; i++) {
+          var bp = ctx.createBiquadFilter();
+          bp.type = "bandpass"; bp.frequency.value = fm.f[i]; bp.Q.value = fm.q[i];
+          var bg = ctx.createGain(); bg.gain.value = 0.4;
+          filt.connect(bp); bp.connect(bg); bg.connect(bank);
+        }
+        head = bank;
+      }
+      var osc = voice(p.wave, detune); osc.connect(filt); osc.start(t); osc.stop(t + dur + 0.05);
+      if (detune) { var o2 = voice(p.wave, -detune); o2.connect(filt); o2.start(t); o2.stop(t + dur + 0.05); }
+      if (sub > 0) {
+        var so = ctx.createOscillator(); so.type = "sine";
+        so.frequency.setValueAtTime(Math.max(20, p.f0 / 2), t);
+        so.frequency.exponentialRampToValueAtTime(Math.max(20, p.f1 / 2), t + dur);
+        var sg = ctx.createGain(); sg.gain.value = sub * 0.6;
+        so.connect(sg); sg.connect(filt); so.start(t); so.stop(t + dur + 0.05);
+      }
+      head.connect(amp); amp.connect(dest);
+      if (p.noise > 0.01) {
+        var src = ctx.createBufferSource(); src.buffer = getNoiseBuffer(ctx); src.loop = true;
+        var nf = ctx.createBiquadFilter();
+        nf.type = "bandpass"; nf.frequency.value = Math.min(9000, p.cutoff); nf.Q.value = 0.6;
+        var ng = ctx.createGain();
+        ng.gain.setValueAtTime(p.noise * 0.7, t);
+        ng.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        src.connect(nf); nf.connect(ng); ng.connect(dest);
+        src.start(t); src.stop(t + dur + 0.05);
+      }
+      return dur;
+    }
+
+    function renderRecipeBlob(p) {
+      var seconds = p.dur + 0.6, sr = 44100;
+      var off = new OfflineAudioContext(2, Math.ceil(seconds * sr), sr);
+      drawRecipe(off, off.destination, p, 0.05);
+      return off.startRendering().then(encodeWav);
+    }
+
+    var FX_DEFAULTS = { dist: 0, crush: 0, reso: 0.8, echo: 0, echoTime: 0.28, reverb: 0, lfoRate: 5, lfoDepth: 0, lfoTarget: "filter", sustain: 1 };
+
+    function makeLinearCurve() {
+      var n = 256, curve = new Float32Array(n);
+      for (var i = 0; i < n; i++) curve[i] = i / (n - 1) * 2 - 1;
+      return curve;
+    }
+    function makeDistCurve(amount) {
+      var n = 256, curve = new Float32Array(n);
+      var k = 1 + amount * 40;
+      var norm = Math.tanh(k);
+      for (var i = 0; i < n; i++) {
+        var x = i / (n - 1) * 2 - 1;
+        curve[i] = Math.tanh(k * x) / norm;
+      }
+      return curve;
+    }
+    function makeCrushCurve(amount) {
+      var n = 1024, curve = new Float32Array(n);
+      var levels = Math.pow(2, Math.max(2, Math.round(8 - amount * 6)));
+      for (var i = 0; i < n; i++) {
+        var x = i / (n - 1) * 2 - 1;
+        curve[i] = Math.round(x * levels) / levels;
+      }
+      return curve;
+    }
+    function makeImpulse(ctx, seconds, decay) {
+      var sr = ctx.sampleRate, len = Math.max(1, Math.floor(sr * seconds));
+      var buf = ctx.createBuffer(2, len, sr);
+      for (var c = 0; c < 2; c++) {
+        var d = buf.getChannelData(c);
+        for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+      }
+      return buf;
+    }
+
+    function buildFxChain(ctx, dest, fx) {
+      fx = Object.assign({}, FX_DEFAULTS, fx || {});
+      var input = ctx.createGain();
+      var distNode = ctx.createWaveShaper(); distNode.oversample = "2x";
+      var crushNode = ctx.createWaveShaper();
+      var filt = ctx.createBiquadFilter(); filt.type = "lowpass"; filt.frequency.value = 9000;
+      var trem = ctx.createGain();
+      var echoSend = ctx.createGain();
+      var dly = ctx.createDelay(1.5);
+      var fb = ctx.createGain(); fb.gain.value = 0.35;
+      var verb = ctx.createConvolver(); verb.buffer = makeImpulse(ctx, 1.8, 2.5);
+      var wetV = ctx.createGain();
+      var dry = ctx.createGain();
+      var out = ctx.createGain();
+      var lfo = ctx.createOscillator(); lfo.type = "sine";
+      var lfoG = ctx.createGain();
+      var lfoPitchG = ctx.createGain();
+      lfo.connect(lfoG); lfo.connect(lfoPitchG);
+      input.connect(distNode); distNode.connect(crushNode); crushNode.connect(filt);
+      filt.connect(trem); trem.connect(dry); dry.connect(out);
+      trem.connect(echoSend); echoSend.connect(dly); dly.connect(fb); fb.connect(dly);
+      dly.connect(verb); verb.connect(wetV); wetV.connect(out);
+      out.connect(dest);
+      var chain = {
+        input: input, lfo: lfo, lfoPitch: lfoPitchG,
+        setFx: function (nfx) {
+          fx = Object.assign({}, FX_DEFAULTS, nfx || {});
+          distNode.curve = fx.dist < 0.01 ? makeLinearCurve() : makeDistCurve(fx.dist);
+          crushNode.curve = fx.crush < 0.01 ? makeLinearCurve() : makeCrushCurve(fx.crush);
+          filt.Q.value = fx.reso;
+          echoSend.gain.value = fx.echo;
+          dly.delayTime.value = fx.echoTime;
+          wetV.gain.value = fx.reverb;
+          dry.gain.value = 1 - fx.reverb * 0.4;
+          lfo.frequency.value = Math.max(0.05, fx.lfoRate);
+          try { lfoG.disconnect(); } catch (e) {}
+          if (fx.lfoTarget === "amplitude") {
+            lfoG.gain.value = fx.lfoDepth * 0.5;
+            lfoG.connect(trem.gain);
+          } else {
+            lfoG.gain.value = fx.lfoDepth * 2000;
+            lfoG.connect(filt.frequency);
+          }
+          lfoPitchG.gain.value = fx.lfoTarget === "pitch" ? fx.lfoDepth * 0.25 : 0;
+        }
+      };
+      chain.setFx(fx);
+      return chain;
+    }
+
+    var SEQ_ROWS = [
+      { id: "kick", label: "Kick" },
+      { id: "snare", label: "Snare" },
+      { id: "hats", label: "Hats" },
+      { id: "bass", label: "Bass" },
+      { id: "chord", label: "Chord stab" },
+      { id: "lead", label: "Lead / Arp" }
+    ];
+    var SEQ_VARIANT_COLORS = ["", "#ffb020", "#2dd4bf", "#a78bfa", "#f472b6"];
+
+    function cycleVariant(v) { return (((v | 0) + 1) % 5); }
+
+    function blankSeqGrid() {
+      var g = {};
+      for (var i = 0; i < SEQ_ROWS.length; i++) {
+        var a = [];
+        for (var s = 0; s < 32; s++) a.push(0);
+        g[SEQ_ROWS[i].id] = a;
+      }
+      return g;
+    }
+
+    function seqStepTimes(st) {
+      var stepDur = 60 / st.bpm / 2, out = [];
+      for (var s = 0; s < st.steps; s++) out.push(+(s * stepDur).toFixed(6));
+      return out;
+    }
+
+    function seqEnv(g, t, peak, dur, sus) {
+      var rel = Math.min(0.5, dur * 0.5) * (sus || 1);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), t + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur * 0.6 + rel);
+    }
+    function seqTone(ctx, dest, t, freq, dur, type, peak, sus) {
+      if (!(freq > 0) || dur <= 0.01) return;
+      var o = ctx.createOscillator(); o.type = type; o.frequency.value = freq;
+      var g = ctx.createGain(); seqEnv(g, t, peak, dur, sus);
+      o.connect(g); g.connect(dest); o.start(t); o.stop(t + dur + 0.8);
+    }
+    function seqKickTone(ctx, dest, t, f0, f1, dur, peak, sus) {
+      var o = ctx.createOscillator(); o.type = "sine";
+      o.frequency.setValueAtTime(Math.max(20, f0), t);
+      o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur * 0.7);
+      var g = ctx.createGain(); seqEnv(g, t, peak, dur, sus);
+      o.connect(g); g.connect(dest); o.start(t); o.stop(t + dur + 0.8);
+    }
+    function seqNoiseHit(ctx, dest, t, dur, peak, ftype, freq, q, sus) {
+      var src = ctx.createBufferSource(); src.buffer = getNoiseBuffer(ctx); src.loop = true;
+      var f = ctx.createBiquadFilter(); f.type = ftype; f.frequency.value = freq; f.Q.value = q || 0.8;
+      var g = ctx.createGain(); seqEnv(g, t, peak, dur, sus);
+      src.connect(f); f.connect(g); g.connect(dest); src.start(t); src.stop(t + dur + 0.8);
+    }
+    function seqLeadNote(mf, chord, rnd) {
+      var scale = [0, 2, 4, 7, 9, 12, 14, 16];
+      return mf(chord + 12 + scale[(rnd() * scale.length) | 0]);
+    }
+
+    var SEQ_VARIANTS = {
+      kick: [
+        function (ctx, d, t, sd, mf, chord, rnd, sus) { seqKickTone(ctx, d, t, 130, 42, 0.26, 0.9, sus); },
+        function (ctx, d, t, sd, mf, chord, rnd, sus) { seqKickTone(ctx, d, t, 170, 50, 0.16, 0.8, sus); seqNoiseHit(ctx, d, t, 0.03, 0.25, "highpass", 4000, 0.7, sus); },
+        function (ctx, d, t, sd, mf, chord, rnd, sus) { seqKickTone(ctx, d, t, 62, 36, 0.55, 1.0, sus); },
+        function (ctx, d, t, sd, mf, chord, rnd, sus) { seqTone(ctx, d, t, 70, 0.2, "sawtooth", 0.5, sus); seqKickTone(ctx, d, t, 90, 40, 0.2, 0.7, sus); }
+      ],
+      snare: [
+        function (ctx, d, t, sd, mf, chord, rnd, sus) { seqNoiseHit(ctx, d, t, 0.18, 0.5, "bandpass", 1800, 1.2, sus); seqTone(ctx, d, t, 190, 0.12, "triangle", 0.4, sus); },
+        function (ctx, d, t, sd, mf, chord, rnd, sus) { seqTone(ctx, d, t, 850, 0.06, "square", 0.35, sus); seqTone(ctx, d, t, 1700, 0.04, "square", 0.2, sus); },
+        function (ctx, d, t, sd, mf, chord, rnd, sus) { seqNoiseHit(ctx, d, t, 0.05, 0.45, "bandpass", 2200, 1.5, sus); seqNoiseHit(ctx, d, t + 0.02, 0.05, 0.4, "bandpass", 2200, 1.5, sus); seqNoiseHit(ctx, d, t + 0.045, 0.09, 0.45, "bandpass", 2200, 1.5, sus); },
+        function (ctx, d, t, sd, mf, chord, rnd, sus) { seqTone(ctx, d, t, 140, 0.2, "sine", 0.6, sus); seqNoiseHit(ctx, d, t, 0.15, 0.35, "lowpass", 900, 0.7, sus); }
+      ],
+      hats: [
+        function (ctx, d, t, sd, mf, chord, rnd, sus) { seqNoiseHit(ctx, d, t, 0.05, 0.3, "highpass", 8000, 0.7, sus); },
+        function (ctx, d, t, sd, mf, chord, rnd, sus) { seqNoiseHit(ctx, d, t, 0.32, 0.3, "highpass", 7500, 0.7, sus); },
+        function (ctx, d, t, sd, mf, chord, rnd, sus) { seqNoiseHit(ctx, d, t, 0.09, 0.35, "bandpass", 6000, 2, sus); },
+        function (ctx, d, t, sd, mf, chord, rnd, sus) { seqNoiseHit(ctx, d, t, 0.04, 0.28, "highpass", 8200, 0.7, sus); seqNoiseHit(ctx, d, t + sd / 2, 0.04, 0.22, "highpass", 8200, 0.7, sus); }
+      ],
+      bass: [
+        function (ctx, d, t, sd, mf, chord, rnd, sus) { seqTone(ctx, d, t, mf(chord - 12), sd * 1.8, "sine", 0.5, sus); },
+        function (ctx, d, t, sd, mf, chord, rnd, sus) {
+          var o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.value = mf(chord - 12);
+          var f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 800; f.Q.value = 1;
+          var g = ctx.createGain(); seqEnv(g, t, 0.4, sd * 1.5, sus);
+          o.connect(f); f.connect(g); g.connect(d); o.start(t); o.stop(t + sd * 1.5 + 0.8);
+        },
+        function (ctx, d, t, sd, mf, chord, rnd, sus) { seqTone(ctx, d, t, mf(chord - 12), 0.18, "square", 0.35, sus); },
+        function (ctx, d, t, sd, mf, chord, rnd, sus) { seqTone(ctx, d, t, mf(chord - 12), sd * 1.6, "sine", 0.45, sus); seqTone(ctx, d, t, mf(chord), sd * 1.2, "sine", 0.15, sus); }
+      ],
+      chord: [
+        function (ctx, d, t, sd, mf, chord, rnd, sus) {
+          var tri = [0, 4, 7];
+          for (var i = 0; i < tri.length; i++) seqTone(ctx, d, t, mf(chord + tri[i]), sd * 3, "triangle", 0.14, sus);
+        },
+        function (ctx, d, t, sd, mf, chord, rnd, sus) {
+          var tri = [0, 4, 7];
+          for (var i = 0; i < tri.length; i++) seqTone(ctx, d, t, mf(chord + tri[i]), 0.3, "sawtooth", 0.1, sus);
+        },
+        function (ctx, d, t, sd, mf, chord, rnd, sus) {
+          var tri = [0, 4, 7];
+          for (var i = 0; i < tri.length; i++) {
+            seqTone(ctx, d, t, mf(chord + tri[i]) * Math.pow(2, 8 / 1200), sd * 2, "sawtooth", 0.07, sus);
+            seqTone(ctx, d, t, mf(chord + tri[i]) * Math.pow(2, -8 / 1200), sd * 2, "sawtooth", 0.07, sus);
+          }
+        },
+        function (ctx, d, t, sd, mf, chord, rnd, sus) {
+          var tri = [0, 4, 7];
+          for (var i = 0; i < tri.length; i++) seqTone(ctx, d, t, mf(chord + tri[i]), 0.22, "triangle", 0.16, sus);
+        }
+      ],
+      lead: [
+        function (ctx, d, t, sd, mf, chord, rnd, sus) { seqTone(ctx, d, t, seqLeadNote(mf, chord, rnd), 0.3, "sine", 0.3, sus); },
+        function (ctx, d, t, sd, mf, chord, rnd, sus) { seqTone(ctx, d, t, seqLeadNote(mf, chord, rnd), 0.22, "square", 0.22, sus); },
+        function (ctx, d, t, sd, mf, chord, rnd, sus) {
+          var base = seqLeadNote(mf, chord, rnd);
+          var arp = [0, 4, 7, 12];
+          for (var i = 0; i < 4; i++) seqTone(ctx, d, t + i * sd / 2, base * Math.pow(2, arp[i] / 12), sd * 0.45, "triangle", 0.2, sus);
+        },
+        function (ctx, d, t, sd, mf, chord, rnd, sus) {
+          var n = seqLeadNote(mf, chord, rnd);
+          seqTone(ctx, d, t, n, 0.28, "triangle", 0.26, sus);
+          seqTone(ctx, d, t + sd * 2, n, 0.22, "triangle", 0.12, sus);
+        }
+      ]
+    };
+
+    function drawSequence(ctx, dest, st, t0) {
+      var t = (typeof t0 === "number") ? t0 : 0;
+      var stepDur = 60 / st.bpm / 2;
+      var keyOff = st.key | 0;
+      function mf(semi) { return 261.626 * Math.pow(2, (keyOff + semi) / 12); }
+      var prog = [0, 7, 9, 5];
+      var chain = buildFxChain(ctx, dest, st.fx);
+      try { chain.lfo.start(t); } catch (e) {}
+      for (var s = 0; s < st.steps; s++) {
+        var stt = t + s * stepDur;
+        var chord = prog[((s / 8) | 0) % prog.length];
+        for (var r = 0; r < SEQ_ROWS.length; r++) {
+          var rowId = SEQ_ROWS[r].id;
+          var v = ((st.grid[rowId] || [])[s] | 0);
+          if (v < 1 || v > 4) continue;
+          var rnd = mulberry32((st.seed ^ Math.imul(s + 1, 2654435761) ^ Math.imul(r + 1, 40503)) >>> 0);
+          SEQ_VARIANTS[rowId][v - 1](ctx, chain.input, stt, stepDur, mf, chord, rnd, (st.fx && st.fx.sustain) || 1);
+        }
+      }
+      var total = st.steps * stepDur;
+      try { chain.lfo.stop(t + total + 0.2); } catch (e) {}
+      return total;
+    }
+
+    function renderSeqBlob(st) {
+      var stepDur = 60 / st.bpm / 2;
+      var seconds = st.steps * stepDur + 2.2, sr = 44100;
+      var off = new OfflineAudioContext(2, Math.ceil(seconds * sr), sr);
+      drawSequence(off, off.destination, st, 0.05);
+      return off.startRendering().then(encodeWav);
+    }
+
+    function seqFromCreation(c) {
+      return { bpm: c.bpm, key: c.key, steps: c.steps, seed: c.seed, grid: c.grid, fx: c.fx };
+    }
+    /* PURE-END */
+
+    /* ---------- Recipes / Foley / Sequencer UI ---------- */
+
+    var activeRecipe = 0;
+
+    function recipeParams(r) {
+      return { wave: r.wave, f0: r.f0, f1: r.f1, dur: r.dur, attack: r.attack, noise: r.noise, cutoff: r.cutoff, vib: r.vib, formant: r.formant, detune: r.detune, sub: r.sub };
+    }
+
+    function buildRecipeGrid() {
+      var host = document.getElementById("recipe-grid");
+      host.innerHTML = RECIPES.map(function (r, i) {
+        return '<button type="button" data-recipe="' + i + '" aria-pressed="' + (i === activeRecipe ? "true" : "false") + '">' + escapeHTML(r.name) + '</button>';
+      }).join("");
+      document.getElementById("recipes-count").textContent = RECIPES.length + " recipes";
+      refreshRecipeMeta();
+    }
+
+    function refreshRecipeMeta() {
+      var r = RECIPES[activeRecipe];
+      var waveName = { sine: "Sine", triangle: "Triangle", square: "Square", sawtooth: "Sawtooth" }[r.wave] || r.wave;
+      var fm = r.formant > 0 && FORMANTS[r.formant] ? " · Formant: " + FORMANTS[r.formant].name : "";
+      document.getElementById("recipe-meta").textContent = waveName + fm + " — " + r.blurb;
+    }
+
+    function buildFoleyGrid() {
+      var host = document.getElementById("foley-grid");
+      host.innerHTML = FOLEY.map(function (f, i) {
+        return '<div class="foley-card"><h4>' + escapeHTML(f.name) + '</h4><p>' + escapeHTML(f.desc) + '</p>' +
+          '<div class="lab-actions"><button type="button" class="play-procedural" data-foley-play="' + i + '">Play</button>' +
+          '<button type="button" data-foley-dl="' + i + '">WAV</button></div></div>';
+      }).join("");
+    }
+
+    var FX_CONTROLS = [
+      ["dist", "Distortion", "%", 0, 100, 0, 1],
+      ["crush", "8-bit crunch", "%", 0, 100, 0, 1],
+      ["reso", "Resonance", "Q", 0.5, 12, 0.8, 0.1],
+      ["echo", "Echo", "%", 0, 80, 0, 1],
+      ["echotime", "Echo time", "ms", 80, 600, 280, 5],
+      ["reverb", "Reverb", "%", 0, 80, 0, 1],
+      ["lforate", "LFO rate", "Hz", 0.1, 20, 5, 0.1],
+      ["lfodepth", "LFO depth", "%", 0, 100, 0, 1],
+      ["sustain", "Sustain", "x", 0.5, 2, 1, 0.05]
+    ];
+
+    var seqState = { steps: 16, bpm: 100, key: 0, seed: (Math.random() * 1e9) | 0, grid: blankSeqGrid() };
+    var seqLive = { chain: null, src: null, loop: false };
+
+    function readFx() {
+      function num(id) { return parseFloat(document.getElementById(id).value); }
+      return {
+        dist: num("fx-dist") / 100,
+        crush: num("fx-crush") / 100,
+        reso: num("fx-reso"),
+        echo: num("fx-echo") / 100,
+        echoTime: num("fx-echotime") / 1000,
+        reverb: num("fx-reverb") / 100,
+        lfoRate: num("fx-lforate"),
+        lfoDepth: num("fx-lfodepth") / 100,
+        lfoTarget: document.getElementById("fx-lfo-target").value,
+        sustain: num("fx-sustain")
+      };
+    }
+
+    function readSeqState() {
+      return {
+        steps: parseInt(document.getElementById("seq-steps").value, 10),
+        bpm: parseFloat(document.getElementById("seq-bpm").value),
+        key: parseInt(document.getElementById("seq-key").value, 10),
+        seed: seqState.seed,
+        grid: seqState.grid,
+        fx: readFx()
+      };
+    }
+
+    function buildSeqGrid() {
+      var host = document.getElementById("seq-grid");
+      var html = "";
+      SEQ_ROWS.forEach(function (row) {
+        html += '<div class="seq-row" data-row="' + row.id + '"><div class="seq-row-label">' + row.label + '</div><div class="seq-cells">';
+        for (var s = 0; s < 32; s++) html += '<button type="button" class="seq-cell v0" data-step="' + s + '" aria-label="' + row.label + " step " + (s + 1) + '">' + (s + 1) + '</button>';
+        html += '</div></div>';
+      });
+      host.innerHTML = html;
+    }
+
+    function refreshSeqGrid() {
+      var steps = seqState.steps;
+      var rows = document.querySelectorAll("#seq-grid .seq-row");
+      for (var i = 0; i < rows.length; i++) {
+        var rowId = rows[i].getAttribute("data-row");
+        var cells = rows[i].querySelectorAll(".seq-cell");
+        for (var s = 0; s < cells.length; s++) {
+          var v = (seqState.grid[rowId][s] | 0) % 5;
+          cells[s].className = "seq-cell v" + v + (s >= steps ? " is-hidden" : "");
+        }
+      }
+    }
+
+    function seqDefaultPattern() {
+      var g = blankSeqGrid();
+      for (var s = 0; s < 32; s += 4) g.kick[s] = 1;
+      g.snare[4] = 1; g.snare[12] = 1; g.snare[20] = 1; g.snare[28] = 1;
+      for (var h = 0; h < 32; h += 2) g.hats[h] = 1;
+      g.bass[0] = 2; g.bass[8] = 2; g.bass[16] = 2; g.bass[24] = 2;
+      g.chord[0] = 1; g.chord[16] = 1;
+      return g;
+    }
+
+    function seqRandomPattern() {
+      var g = blankSeqGrid();
+      var rnd = mulberry32((Math.random() * 1e9) | 0);
+      for (var s = 0; s < 32; s++) {
+        if (s % 4 === 0) g.kick[s] = 1 + ((rnd() * 2) | 0);
+        if (s % 8 === 4) g.snare[s] = 1;
+        if (s % 2 === 0 && rnd() < 0.85) g.hats[s] = 1;
+        if (s % 8 === 0) g.bass[s] = 1 + ((rnd() * 2) | 0);
+        if (s % 16 === 0 && rnd() < 0.8) g.chord[s] = 1 + ((rnd() * 2) | 0);
+        if (rnd() < 0.3) g.lead[s] = 1 + ((rnd() * 4) | 0);
+      }
+      return g;
+    }
+
+    function seqStopLive() {
+      if (seqLive.src) {
+        try { seqLive.src.stop(); } catch (e) {}
+        try { seqLive.src.disconnect(); } catch (e) {}
+        seqLive.src = null;
+      }
+      if (seqLive.chain) {
+        try { seqLive.chain.lfo.stop(); } catch (e) {}
+        seqLive.chain = null;
+      }
+    }
+
+    /* ---------- Recipes / Foley / Sequencer wiring ---------- */
+
+    buildRecipeGrid();
+    buildFoleyGrid();
+    buildSliders("fx-sliders", FX_CONTROLS, "fx");
+    buildSeqGrid();
+    seqState.grid = seqDefaultPattern();
+
+    (function buildSeqKeys() {
+      var sel = document.getElementById("seq-key");
+      MUSIC_KEYS.forEach(function (k) {
+        var o = document.createElement("option");
+        o.value = k[1]; o.textContent = k[0];
+        sel.appendChild(o);
+      });
+    })();
+
+    refreshSeqGrid();
+
+    document.getElementById("recipe-grid").addEventListener("click", function (ev) {
+      var btn = ev.target.closest("button"); if (!btn) return;
+      activeRecipe = parseInt(btn.getAttribute("data-recipe"), 10) || 0;
+      var btns = this.querySelectorAll("button");
+      for (var i = 0; i < btns.length; i++) btns[i].setAttribute("aria-pressed", btns[i] === btn ? "true" : "false");
+      refreshRecipeMeta();
+      flash("Recipe: " + RECIPES[activeRecipe].name);
+    });
+
+    document.getElementById("recipe-play").addEventListener("click", async function () {
+      try {
+        await ensureAudio();
+        var g = audioCtx.createGain(); g.gain.value = volume; g.connect(audioCtx.destination);
+        drawRecipe(audioCtx, g, recipeParams(RECIPES[activeRecipe]));
+        markPlaying(this);
+        flash("Playing " + RECIPES[activeRecipe].name);
+      } catch (e) { flash("Could not play."); }
+    });
+
+    document.getElementById("recipe-download").addEventListener("click", async function () {
+      flash("Rendering WAV…");
+      try {
+        var blob = await renderRecipeBlob(recipeParams(RECIPES[activeRecipe]));
+        downloadBlob(blob, "recipe-" + RECIPES[activeRecipe].id + ".wav");
+        flash("WAV downloaded");
+      } catch (e) { flash("Could not render."); }
+    });
+
+    document.getElementById("recipe-save").addEventListener("click", function () {
+      var filename = uniqueFilename(sanitizeFilename(document.getElementById("recipe-filename").value, "custom-recipe"));
+      var purpose = document.getElementById("recipe-purpose").value.trim();
+      creations.push({
+        seq: creationSeq++, kind: "sfx", filename: filename, purpose: purpose,
+        label: prettyLabel(filename), params: recipeParams(RECIPES[activeRecipe])
+      });
+      document.getElementById("recipe-filename").value = nextDefaultFilename("custom-recipe");
+      document.getElementById("recipe-purpose").value = "";
+      persistCreations(); renderCreations();
+      flash("Saved “" + filename + "” to My Creations");
+      document.getElementById("section-my-creations").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    document.getElementById("foley-grid").addEventListener("click", async function (ev) {
+      var btn = ev.target.closest("button"); if (!btn) return;
+      var pi = btn.getAttribute("data-foley-play");
+      var di = btn.getAttribute("data-foley-dl");
+      if (pi !== null) {
+        try {
+          await ensureAudio();
+          var g = audioCtx.createGain(); g.gain.value = volume; g.connect(audioCtx.destination);
+          drawRecipe(audioCtx, g, recipeParams(FOLEY[+pi]));
+          markPlaying(btn);
+          flash("Playing " + FOLEY[+pi].name);
+        } catch (e) { flash("Could not play."); }
+      } else if (di !== null) {
+        flash("Rendering WAV…");
+        try {
+          var blob = await renderRecipeBlob(recipeParams(FOLEY[+di]));
+          downloadBlob(blob, "foley-" + FOLEY[+di].id + ".wav");
+          flash("WAV downloaded");
+        } catch (e) { flash("Could not render."); }
+      }
+    });
+
+    document.getElementById("seq-steps").addEventListener("change", function () {
+      seqState.steps = parseInt(this.value, 10) === 32 ? 32 : 16;
+      refreshSeqGrid();
+      flash(seqState.steps + " steps");
+    });
+
+    document.getElementById("seq-bpm").addEventListener("input", function () {
+      seqState.bpm = parseFloat(this.value);
+      document.getElementById("seq-bpm-out").textContent = this.value + " BPM";
+    });
+
+    document.getElementById("seq-grid").addEventListener("click", function (ev) {
+      var cell = ev.target.closest(".seq-cell"); if (!cell) return;
+      var rowEl = cell.closest(".seq-row"); if (!rowEl) return;
+      var rowId = rowEl.getAttribute("data-row");
+      var s = parseInt(cell.getAttribute("data-step"), 10);
+      seqState.grid[rowId][s] = cycleVariant(seqState.grid[rowId][s]);
+      refreshSeqGrid();
+    });
+
+    document.getElementById("seq-regen").addEventListener("click", function () {
+      seqState.seed = (Math.random() * 1e9) | 0;
+      seqState.grid = seqRandomPattern();
+      refreshSeqGrid();
+      flash("New pattern drafted — play it");
+    });
+
+    document.getElementById("seq-clear").addEventListener("click", function () {
+      seqState.grid = blankSeqGrid();
+      refreshSeqGrid();
+      flash("Pattern cleared");
+    });
+
+    document.getElementById("fx-sliders").addEventListener("input", function () {
+      if (seqLive.chain) seqLive.chain.setFx(readFx());
+    });
+    document.getElementById("fx-lfo-target").addEventListener("change", function () {
+      if (seqLive.chain) seqLive.chain.setFx(readFx());
+    });
+
+    document.getElementById("seq-play").addEventListener("click", async function () {
+      flash("Rendering your pattern…");
+      try {
+        await ensureAudio();
+        seqStopLive();
+        var blob = await renderSeqBlob(readSeqState());
+        var ab = await blob.arrayBuffer();
+        var buf = await audioCtx.decodeAudioData(ab);
+        var fx = readFx();
+        var master = audioCtx.createGain(); master.gain.value = volume; master.connect(audioCtx.destination);
+        var chain = buildFxChain(audioCtx, master, fx);
+        chain.lfo.start();
+        var src = audioCtx.createBufferSource();
+        src.buffer = buf; src.loop = seqLive.loop;
+        chain.lfoPitch.connect(src.playbackRate);
+        src.connect(chain.input);
+        src.start();
+        seqLive.chain = chain; seqLive.src = src;
+        markPlaying(this);
+        flash(seqLive.loop ? "Looping your pattern" : "Playing your pattern");
+      } catch (e) { flash("Could not play."); }
+    });
+
+    document.getElementById("seq-loop").addEventListener("click", function () {
+      seqLive.loop = !seqLive.loop;
+      this.setAttribute("aria-pressed", seqLive.loop ? "true" : "false");
+      this.textContent = "Loop: " + (seqLive.loop ? "on" : "off");
+      if (seqLive.src) { try { seqLive.src.loop = seqLive.loop; } catch (e) {} }
+      flash("Loop " + (seqLive.loop ? "on — preview will repeat" : "off"));
+    });
+
+    document.getElementById("seq-stop").addEventListener("click", function () {
+      seqStopLive();
+      flash("Stopped");
+    });
+
+    document.getElementById("seq-download").addEventListener("click", async function () {
+      flash("Rendering WAV…");
+      try {
+        var blob = await renderSeqBlob(readSeqState());
+        downloadBlob(blob, "seq-" + Date.now().toString(36) + ".wav");
+        flash("WAV downloaded");
+      } catch (e) { flash("Could not render."); }
+    });
+
+    document.getElementById("seq-save").addEventListener("click", function () {
+      var st = readSeqState();
+      var filename = uniqueFilename(sanitizeFilename(document.getElementById("seq-filename").value, "custom-seq"));
+      var purpose = document.getElementById("seq-purpose").value.trim();
+      creations.push({
+        seq: creationSeq++, kind: "music", sub: "seq", filename: filename, purpose: purpose,
+        label: prettyLabel(filename), bpm: st.bpm, key: st.key, steps: st.steps, seed: st.seed,
+        grid: JSON.parse(JSON.stringify(st.grid)), fx: st.fx
+      });
+      document.getElementById("seq-filename").value = nextDefaultFilename("custom-seq");
+      document.getElementById("seq-purpose").value = "";
+      persistCreations(); renderCreations();
+      flash("Saved “" + filename + "” to My Creations");
+      document.getElementById("section-my-creations").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
     /* ---------- My Creations (custom slots) ---------- */
 
     var creations = [];
@@ -1814,6 +2558,7 @@ class ProceduralCatAudioEngine {
         localStorage.setItem(CREATION_KEY, JSON.stringify(creations.map(function (c) {
           var o = { seq: c.seq, kind: c.kind, filename: c.filename, purpose: c.purpose, label: c.label };
           if (c.kind === "sfx") { o.params = c.params; }
+          else if (c.sub === "seq") { o.sub = "seq"; o.bpm = c.bpm; o.key = c.key; o.steps = c.steps; o.seed = c.seed; o.grid = c.grid; o.fx = c.fx; }
           else { o.mood = c.mood; o.key = c.key; o.bpm = c.bpm; o.density = c.density; o.seed = c.seed; }
           return o;
         })));
@@ -1876,6 +2621,17 @@ class ProceduralCatAudioEngine {
         await ensureAudio();
         var g = audioCtx.createGain(); g.gain.value = volume; g.connect(audioCtx.destination);
         drawSfx(audioCtx, g, c.params);
+        markPlaying(btn);
+        flash("Playing " + c.label);
+      } else if (c.sub === "seq") {
+        flash("Rendering " + c.label + "…");
+        if (!c._url) {
+          var sblob = await renderSeqBlob(seqFromCreation(c));
+          c._url = URL.createObjectURL(sblob);
+        }
+        if (c._audio) c._audio.pause();
+        c._audio = new Audio(c._url); c._audio.volume = volume;
+        await c._audio.play();
         markPlaying(btn);
         flash("Playing " + c.label);
       } else {
@@ -2027,7 +2783,9 @@ class ProceduralCatAudioEngine {
         try {
           var blob = c.kind === "sfx"
             ? await renderSfxBlob(c.params)
-            : await renderMusicBlob({ mood: c.mood, key: c.key, bpm: c.bpm, density: c.density }, c.seed);
+            : (c.sub === "seq"
+              ? await renderSeqBlob(seqFromCreation(c))
+              : await renderMusicBlob({ mood: c.mood, key: c.key, bpm: c.bpm, density: c.density }, c.seed));
           downloadBlob(blob, c.filename + ".wav");
           flash("WAV downloaded");
         } catch (e) { flash("Could not render."); }
@@ -2144,7 +2902,9 @@ class ProceduralCatAudioEngine {
         var entries = [];
         for (var i = 0; i < scenes.length; i++) {
           var c = byScene[scenes[i]];
-          var blob = await renderMusicBlob({ mood: c.mood, key: c.key, bpm: c.bpm, density: c.density }, c.seed);
+          var blob = c.sub === "seq"
+            ? await renderSeqBlob(seqFromCreation(c))
+            : await renderMusicBlob({ mood: c.mood, key: c.key, bpm: c.bpm, density: c.density }, c.seed);
           var buf = new Uint8Array(await blob.arrayBuffer());
           entries.push({ name: scenes[i] + ".wav", data: buf });
           flash("Rendered " + (i + 1) + " of " + scenes.length + "…");
