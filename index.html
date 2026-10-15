@@ -294,6 +294,7 @@
     .seq-cell.v3 { background: #a78bfa; color: #241b4d; opacity: 1; }
     .seq-cell.v4 { background: #f472b6; color: #3d1030; opacity: 1; }
     .seq-cell.is-hidden { display: none; }
+    .seq-cell.is-playing { box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #10131a; position: relative; z-index: 1; }
     .seq-legend { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0 0; color: var(--muted); font-size: .76rem; }
     .seq-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 4px; vertical-align: -1px; }
     .fx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0 14px; }
@@ -2268,7 +2269,8 @@ class ProceduralCatAudioEngine {
     ];
 
     var seqState = { steps: 16, bpm: 100, key: 0, seed: (Math.random() * 1e9) | 0, grid: blankSeqGrid() };
-    var seqLive = { chain: null, src: null, loop: false };
+    var seqLive = { chain: null, src: null, loop: false, startTime: 0, stepDur: 0.3, steps: 16, loopDur: 0, renderToken: 0, playheadRaf: 0, playheadStep: -1 };
+    var seqRerenderTimer = 0;
 
     function readFx() {
       function num(id) { return parseFloat(document.getElementById(id).value); }
@@ -2346,7 +2348,16 @@ class ProceduralCatAudioEngine {
     }
 
     function seqStopLive() {
+      seqLive.renderToken++;
+      seqTeardownLive();
+    }
+
+    function seqTeardownLive() {
+      if (seqRerenderTimer) { clearTimeout(seqRerenderTimer); seqRerenderTimer = 0; }
+      if (seqLive.playheadRaf) { cancelAnimationFrame(seqLive.playheadRaf); seqLive.playheadRaf = 0; }
+      seqClearPlayhead();
       if (seqLive.src) {
+        try { seqLive.src.onended = null; } catch (e) {}
         try { seqLive.src.stop(); } catch (e) {}
         try { seqLive.src.disconnect(); } catch (e) {}
         seqLive.src = null;
@@ -2355,6 +2366,104 @@ class ProceduralCatAudioEngine {
         try { seqLive.chain.lfo.stop(); } catch (e) {}
         seqLive.chain = null;
       }
+    }
+
+    function seqClearPlayhead() {
+      var prev = document.querySelectorAll("#seq-grid .seq-cell.is-playing");
+      for (var i = 0; i < prev.length; i++) prev[i].classList.remove("is-playing");
+      seqLive.playheadStep = -1;
+    }
+
+    /* Pure step math: returns the 0-based playing step, -1 while in the
+       render tail past the last step, or -2 when a non-looping preview ended. */
+    function seqPlayheadStep(elapsed, stepDur, steps, loopDur, loop) {
+      var pos = loop ? (elapsed % loopDur) : elapsed;
+      if (!loop && pos >= loopDur) return -2;
+      var step = Math.floor(pos / stepDur);
+      return (step >= 0 && step < steps) ? step : -1;
+    }
+
+    function seqStartPlayhead() {
+      if (seqLive.playheadRaf) cancelAnimationFrame(seqLive.playheadRaf);
+      seqLive.playheadRaf = requestAnimationFrame(seqPlayheadTick);
+    }
+
+    function seqPlayheadTick() {
+      seqLive.playheadRaf = 0;
+      if (!seqLive.src || !audioCtx) { seqClearPlayhead(); return; }
+      var step = seqPlayheadStep(audioCtx.currentTime - seqLive.startTime, seqLive.stepDur, seqLive.steps, seqLive.loopDur, seqLive.loop);
+      if (step === -2) { seqStopLive(); return; }
+      if (step !== seqLive.playheadStep) {
+        seqClearPlayhead();
+        if (step >= 0) {
+          seqLive.playheadStep = step;
+          var cells = document.querySelectorAll('#seq-grid .seq-cell[data-step="' + step + '"]');
+          for (var i = 0; i < cells.length; i++) {
+            if (!cells[i].classList.contains("is-hidden")) cells[i].classList.add("is-playing");
+          }
+          seqScrollToStep(step);
+        } else {
+          seqLive.playheadStep = step;
+        }
+      }
+      seqLive.playheadRaf = requestAnimationFrame(seqPlayheadTick);
+    }
+
+    function seqScrollToStep(step) {
+      var wrap = document.querySelector(".seq-wrap");
+      var row = document.querySelector("#seq-grid .seq-row");
+      if (!wrap || !row) return;
+      var cell = row.querySelector('.seq-cell[data-step="' + step + '"]');
+      if (!cell || cell.classList.contains("is-hidden")) return;
+      var left = 0, el = cell;
+      while (el && el !== wrap) { left += el.offsetLeft; el = el.offsetParent; }
+      var cw = cell.offsetWidth || 42;
+      if (left < wrap.scrollLeft) wrap.scrollLeft = Math.max(0, left - 8);
+      else if (left + cw > wrap.scrollLeft + wrap.clientWidth) wrap.scrollLeft = left + cw - wrap.clientWidth + 8;
+    }
+
+    /* Debounced live preview: structural or FX edits re-render the playing
+       preview ~300ms after the last edit. Idle (not playing) edits only update
+       the pending state — audio never auto-starts (browser autoplay policy). */
+    function seqScheduleLiveUpdate() {
+      if (!seqLive.src) return;
+      if (seqRerenderTimer) clearTimeout(seqRerenderTimer);
+      seqRerenderTimer = setTimeout(function () { seqRerenderTimer = 0; seqRerenderLive(); }, 300);
+    }
+
+    async function seqRerenderLive() {
+      var token = ++seqLive.renderToken;
+      try {
+        await ensureAudio();
+        if (token !== seqLive.renderToken) return;
+        seqTeardownLive();
+        if (token !== seqLive.renderToken) return;
+        await startSeqPreview(token);
+      } catch (e) { /* keep the old preview state; the next edit retries */ }
+    }
+
+    async function startSeqPreview(token) {
+      var st = readSeqState();
+      var blob = await renderSeqBlob(st);
+      if (token !== seqLive.renderToken) return;
+      var ab = await blob.arrayBuffer();
+      var buf = await audioCtx.decodeAudioData(ab);
+      if (token !== seqLive.renderToken) return;
+      var fx = readFx();
+      var master = audioCtx.createGain(); master.gain.value = volume; master.connect(audioCtx.destination);
+      var chain = buildFxChain(audioCtx, master, fx);
+      chain.lfo.start();
+      var src = audioCtx.createBufferSource();
+      src.buffer = buf; src.loop = seqLive.loop;
+      chain.lfoPitch.connect(src.playbackRate);
+      src.connect(chain.input);
+      var stepDur = 60 / st.bpm / 2;
+      src.onended = function () { if (seqLive.src === src) seqStopLive(); };
+      src.start();
+      seqLive.chain = chain; seqLive.src = src;
+      seqLive.startTime = audioCtx.currentTime;
+      seqLive.stepDur = stepDur; seqLive.steps = st.steps; seqLive.loopDur = buf.duration;
+      seqStartPlayhead();
     }
 
     /* ---------- Recipes / Foley / Sequencer wiring ---------- */
@@ -2444,11 +2553,17 @@ class ProceduralCatAudioEngine {
       seqState.steps = parseInt(this.value, 10) === 32 ? 32 : 16;
       refreshSeqGrid();
       flash(seqState.steps + " steps");
+      seqScheduleLiveUpdate();
     });
 
     document.getElementById("seq-bpm").addEventListener("input", function () {
       seqState.bpm = parseFloat(this.value);
       document.getElementById("seq-bpm-out").textContent = this.value + " BPM";
+      seqScheduleLiveUpdate();
+    });
+
+    document.getElementById("seq-key").addEventListener("change", function () {
+      seqScheduleLiveUpdate();
     });
 
     document.getElementById("seq-grid").addEventListener("click", function (ev) {
@@ -2458,6 +2573,7 @@ class ProceduralCatAudioEngine {
       var s = parseInt(cell.getAttribute("data-step"), 10);
       seqState.grid[rowId][s] = cycleVariant(seqState.grid[rowId][s]);
       refreshSeqGrid();
+      seqScheduleLiveUpdate();
     });
 
     document.getElementById("seq-regen").addEventListener("click", function () {
@@ -2465,19 +2581,23 @@ class ProceduralCatAudioEngine {
       seqState.grid = seqRandomPattern();
       refreshSeqGrid();
       flash("New pattern drafted — play it");
+      seqScheduleLiveUpdate();
     });
 
     document.getElementById("seq-clear").addEventListener("click", function () {
       seqState.grid = blankSeqGrid();
       refreshSeqGrid();
       flash("Pattern cleared");
+      seqScheduleLiveUpdate();
     });
 
     document.getElementById("fx-sliders").addEventListener("input", function () {
       if (seqLive.chain) seqLive.chain.setFx(readFx());
+      seqScheduleLiveUpdate();
     });
     document.getElementById("fx-lfo-target").addEventListener("change", function () {
       if (seqLive.chain) seqLive.chain.setFx(readFx());
+      seqScheduleLiveUpdate();
     });
 
     document.getElementById("seq-play").addEventListener("click", async function () {
@@ -2485,19 +2605,8 @@ class ProceduralCatAudioEngine {
       try {
         await ensureAudio();
         seqStopLive();
-        var blob = await renderSeqBlob(readSeqState());
-        var ab = await blob.arrayBuffer();
-        var buf = await audioCtx.decodeAudioData(ab);
-        var fx = readFx();
-        var master = audioCtx.createGain(); master.gain.value = volume; master.connect(audioCtx.destination);
-        var chain = buildFxChain(audioCtx, master, fx);
-        chain.lfo.start();
-        var src = audioCtx.createBufferSource();
-        src.buffer = buf; src.loop = seqLive.loop;
-        chain.lfoPitch.connect(src.playbackRate);
-        src.connect(chain.input);
-        src.start();
-        seqLive.chain = chain; seqLive.src = src;
+        var token = seqLive.renderToken;
+        await startSeqPreview(token);
         markPlaying(this);
         flash(seqLive.loop ? "Looping your pattern" : "Playing your pattern");
       } catch (e) { flash("Could not play."); }
