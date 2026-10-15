@@ -389,6 +389,7 @@
               <button type="button" id="sfx-download">Download WAV</button>
             </div>
             <label class="lab-field"><span>Filename</span><input id="sfx-filename" type="text" value="custom-sfx-1" spellcheck="false" autocomplete="off"></label>
+            <label class="lab-field"><span>Game SFX name</span><select id="sfx-name-pick" class="sfx-name-pick" data-target="sfx-filename" aria-label="Pick a game SFX filename"></select></label>
             <label class="lab-field"><span>Purpose</span><input id="sfx-purpose" type="text" maxlength="90" placeholder="e.g. victory jingle for Snowball Toss" autocomplete="off"></label>
             <button type="button" id="sfx-save" class="play-procedural">Save as new slot</button>
             <p class="lab-hint">Lands in My Creations as <code>assets/audio/sfx/&lt;filename&gt;.mp3</code></p>
@@ -440,6 +441,7 @@
               <button type="button" id="recipe-download">Download WAV</button>
             </div>
             <label class="lab-field"><span>Filename</span><input id="recipe-filename" type="text" value="custom-recipe-1" spellcheck="false" autocomplete="off"></label>
+            <label class="lab-field"><span>Game SFX name</span><select id="recipe-name-pick" class="sfx-name-pick" data-target="recipe-filename" aria-label="Pick a game SFX filename"></select></label>
             <label class="lab-field"><span>Purpose</span><input id="recipe-purpose" type="text" maxlength="90" autocomplete="off"></label>
             <button type="button" id="recipe-save" class="play-procedural">Save as new slot</button>
             <p class="lab-hint">Lands in My Creations as <code>assets/audio/sfx/&lt;filename&gt;.mp3</code></p>
@@ -2585,6 +2587,42 @@ class ProceduralCatAudioEngine {
       while (taken[prefix + "-" + n]) n++;
       return prefix + "-" + n;
     }
+
+    // Canonical game SFX filenames (from SOUND-NEEDS.md, mirroring the game's
+    // assets/audio/README.md). Picking one fills the filename field — the
+    // field stays manually editable; the dropdown resets to its placeholder.
+    var SFX_NAME_GROUPS = [
+      ["UI & feedback", ["ui-tap", "ui-confirm", "ui-back", "coin-collect", "coin-payout-shower", "minigame-win", "minigame-lose", "countdown-beep", "countdown-go", "achievement-unlock", "dialogue-blip", "error"]],
+      ["Character emotes", ["emote-laugh", "emote-grunt", "emote-confusion", "emote-question", "emote-excitement", "emote-cheerful", "emote-talking", "emote-mumbling", "emote-gasp", "emote-sigh"]],
+      ["Cat vocals", ["cat-meow", "cat-question", "cat-purr", "cat-hiss", "cat-trill", "cat-chatter", "cat-growl", "cat-yowl"]],
+      ["Minigame, movement & ambience", ["minigame-whistle", "minigame-stopwatch", "minigame-alarm", "minigame-siren", "ambience-rain", "movement-snow-crunch", "ambience-fire", "minigame-impact", "minigame-ball-whoosh", "minigame-ball-catch", "minigame-paint-splatter", "minigame-buzzer"]],
+      ["Optional", ["footsteps"]]
+    ];
+
+    function populateSfxNamePick(select) {
+      var ph = document.createElement("option");
+      ph.value = ""; ph.textContent = "Pick a game SFX name…";
+      select.appendChild(ph);
+      SFX_NAME_GROUPS.forEach(function (group) {
+        var og = document.createElement("optgroup");
+        og.label = group[0];
+        group[1].forEach(function (name) {
+          var o = document.createElement("option");
+          o.value = name; o.textContent = name;
+          og.appendChild(o);
+        });
+        select.appendChild(og);
+      });
+      select.addEventListener("change", function () {
+        var v = select.value;
+        if (v) {
+          var target = document.getElementById(select.getAttribute("data-target"));
+          if (target) target.value = v;
+        }
+        select.value = "";
+      });
+    }
+    Array.prototype.forEach.call(document.querySelectorAll(".sfx-name-pick"), populateSfxNamePick);
 
     function prettyLabel(fn) {
       return fn.split("-").map(function (w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(" ");
