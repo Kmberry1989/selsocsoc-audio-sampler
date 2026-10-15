@@ -1,0 +1,20 @@
+{
+  "editor": "audio-sampler",
+  "name": "Audio Sampler",
+  "shares": [
+    {
+      "type": "music-track",
+      "format": "wav",
+      "location": "music/",
+      "note": "Game music tracks (board-game, home, minigames, plaza, shops, \u2026)"
+    },
+    {
+      "type": "sfx",
+      "format": "wav",
+      "location": "music/",
+      "note": "Sound effects"
+    }
+  ],
+  "consumes": [],
+  "npcManifest": "https://raw.githubusercontent.com/Kmberry1989/selsocsoc/main/assets/npc/manifest.json"
+}
