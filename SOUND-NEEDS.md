@@ -73,8 +73,9 @@ or distress events — ordinary companion moments use the quieter ones.
 - `minigame-alarm.wav` — alarm bells: alternating two-tone square, 1s.
 - `minigame-siren.wav` — rising/falling siren sweep. Reserved for a future event —
   not attached to ordinary play, build it last.
-- `ambience-rain.wav` — soft loopable rain: filtered noise bed, 2s seamless loop.
-  Keep it quiet — rain should sit under the scene, not over it.
+- `ambience-rain.wav` — sparse, breathing rain: filtered noise bed with slow
+  swells and lulls (never a flat bed), sparse drip plinks, occasional patter
+  bursts. 3s seamless loop. Keep it quiet — rain sits under the scene.
 - `movement-snow-crunch.wav` — footstep crunch: short noise bursts with a
   crunch envelope.
 - `ambience-fire.wav` — cozy crackle loop: random pops over a low rumble, 2s loop.
@@ -85,6 +86,12 @@ or distress events — ordinary companion moments use the quieter ones.
 - `minigame-ball-catch.wav` — soft catch thump: muted pop.
 - `minigame-paint-splatter.wav` — wet splat: noise burst + low blub.
 - `minigame-buzzer.wav` — game-show buzzer: harsh square 140Hz + distortion, 500ms.
+
+Thunder (new slots for the rain weather system — the game already fires lightning
+during Thunderstorm weather, so these have a live hook waiting):
+- `thunder-distant.wav` — low rolling rumble, 3-4s, soft attack. Distant storm.
+- `thunder-close.wav` — sharp crack transient then rolling decay, ~2s. Near strike.
+- `thunder-roll.wav` — long rolling thunder, 5-6s, slow swells. Lingering storm.
 
 ## Legacy aliases (no new builds needed)
 

@@ -105,9 +105,10 @@ use the quieter ones.
   Urgent but not harsh — keep distortion off.
 - `minigame-siren.wav` — Sine sweep 600→1200→600Hz over 2s, triangle body.
   Build last — it's for a future event, not ordinary play.
-- `ambience-rain.wav` — Noise bed, lowpass 2kHz + highpass 400Hz, 3s seamless
-  loop, kept LOW in the mix. My take: sprinkle random soft "drip" plinks (sine
-  2–4kHz, sparse) — rain with character. And yes, quieter than you'd think.
+- `ambience-rain.wav` — v2, less constant: noise bed (lowpass 1.8kHz + highpass
+  400Hz) with deep slow amplitude wander (integer-cycle LFOs so the 3s loop joins
+  cleanly), only 4 sparse drip plinks, 2 brief patter bursts of tiny ticks.
+  Breathing, not a flat bed — and still quiet.
 - `movement-snow-crunch.wav` — 3 staggered noise crunches per step, bandpass
   ~800Hz, 120ms each. Crunch = short noise burst with fast decay + a tiny low
   thump under it.
@@ -124,6 +125,24 @@ use the quieter ones.
   200→90Hz, 150ms). Wetness: 2–3 tiny droplet plinks trailing after.
 - `minigame-buzzer.wav` — Square 130Hz + distortion 70%, 600ms, 55Hz sub
   underneath. Game-show wrong-answer energy.
+
+## Thunder (new — for the Thunderstorm weather hook)
+
+The game fires lightning strikes during Thunderstorm weather (with a cooldown
+between strikes), so these have a live hook waiting. Vary which one plays per
+strike — distant rumbles for far strikes, the crack for close ones.
+
+- `thunder-distant.wav` — 3.5s. Lowpassed noise (120Hz) swelling in soft over
+  ~1s, sub sine at 42Hz riding the same swell, plus a second smaller swell a
+  second later for the "rolling" feel. No sharp attack at all — distance rounds
+  everything off. Keep it deep and patient.
+- `thunder-close.wav` — 2.0s. Opens with a bright crack: highpassed noise burst
+  decaying in ~50ms, then the body rolls out — lowpassed noise decaying over
+  ~0.7s with a sub thump gliding 70→35Hz underneath. The crack-then-rumble shape
+  is the whole trick.
+- `thunder-roll.wav` — 5.5s. Long rumble with 3-4 slow amplitude swells
+  (raised-cosine bumps, seeded random) over a gently decaying bed, sub sine at
+  40Hz following the same swells, tail faded to zero. For when the storm lingers.
 
 ## Area music tracks
 
