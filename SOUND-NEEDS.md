@@ -94,13 +94,24 @@ build separate files for them: `ui-click`, `ui-select`, `coin-pickup`, `win`,
 `footsteps.wav` is also supported and optional — start from the Footstep foley
 starter if you want walking to make noise.
 
-## Music (all 6 scenes complete)
+## Music
 
-`title-screen`, `home`, `plaza`, `shops`, `minigames`, `board-game` are done and
-live. Nothing required. Optional ideas only — build if you feel like it, the game
-doesn't ask for these:
+The 6 core scene tracks are DONE and live: `title-screen`, `home`, `plaza`,
+`shops`, `minigames`, `board-game`.
 
-- Festival variants: the town runs 3 rotating festivals; alternate plaza/music
-  takes for festival time would be a nice touch.
-- A short victory stinger for board-game/minigame wins (the win SFX covers the
-  moment already — this would be extra flavor).
+### Area tracks (new — game will switch to these by area)
+
+The game is being wired to switch music when the player enters these areas
+(anything else keeps the current 6). Build each as a clean loop, like the core
+tracks. Filenames (in `assets/audio/music/`):
+
+- `pond.wav` — the fishing pond (Bobby Gill). Lazy water, soft plucks, unhurried.
+- `garden.wav` — Fern's garden. Sunny, earthy, gentle momentum.
+- `footbridge.wav` — the Moonlight Footbridge. Night air, a little magical,
+  sparser arrangement.
+- `cat-shelter.wav` — Agnes Alley's shelter. Warm, gentle, playful.
+- `bank.wav` — Mr. Buck Coinsworth's bank. Polished, a bit pompous, steady.
+- `festival.wav` — the rotating festival grounds (Pip Parade). Upbeat,
+  celebratory, higher energy than plaza.
+
+### Optional ideas only
